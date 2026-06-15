@@ -5,14 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BarchScan | Ingestion</title>
     <style>
+        /* Base Variables (Dark Theme Default) */
         :root {
             --bg-color: #0a0a0a;
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
             --accent: #ffffff;
+            --accent-inverse: #000000;
             --text-primary: #ededed;
             --text-secondary: #888888;
             --progress-bg: #222222;
+            --hover-overlay: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Light Theme Override */
+        [data-theme="light"] {
+            --bg-color: #f4f4f5;
+            --glass-bg: rgba(0, 0, 0, 0.02);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --accent: #000000;
+            --accent-inverse: #ffffff;
+            --text-primary: #18181b;
+            --text-secondary: #71717a;
+            --progress-bg: #e4e4e7;
+            --hover-overlay: rgba(0, 0, 0, 0.05);
         }
 
         * {
@@ -30,6 +46,7 @@
             align-items: center;
             min-height: 100vh;
             padding: 1.5rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .ingestion-card {
@@ -41,13 +58,41 @@
             padding: 2.5rem 1.5rem;
             width: 100%;
             max-width: 500px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Header with Theme Toggle */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
         }
 
         h1 {
             font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--hover-overlay);
         }
 
         p.subtitle {
@@ -56,36 +101,65 @@
             margin-bottom: 2rem;
         }
 
+        /* Dual Input Area */
         .drop-zone {
             border: 2px dashed var(--glass-border);
             border-radius: 8px;
-            padding: 2.5rem 1rem;
+            padding: 2rem 1rem;
             text-align: center;
-            cursor: pointer;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--glass-bg);
             margin-bottom: 1.5rem;
+            transition: border-color 0.3s ease;
         }
 
         .drop-zone-text {
             color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
 
-        .drop-zone-text span {
-            color: var(--accent);
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        @media (min-width: 400px) {
+            .action-buttons {
+                flex-direction: row;
+            }
+        }
+
+        .secondary-btn {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            font-size: 0.9rem;
             font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .secondary-btn:hover {
+            background: var(--hover-overlay);
+            border-color: var(--accent);
         }
 
         input[type="file"] {
             display: none;
         }
 
+        /* Active File Preview */
         #file-preview {
             display: none;
             align-items: center;
             justify-content: space-between;
             padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--hover-overlay);
+            border: 1px solid var(--glass-border);
             border-radius: 6px;
             margin-bottom: 1.5rem;
             font-size: 0.85rem;
@@ -109,50 +183,88 @@
             transition: width 0.3s ease;
         }
 
-        button {
+        /* Main Submit Button */
+        button.primary-btn {
             width: 100%;
             padding: 1rem;
             background-color: var(--accent);
-            color: var(--bg-color);
+            color: var(--accent-inverse);
             border: none;
             border-radius: 6px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
+            transition: opacity 0.2s ease;
         }
 
-        button:disabled {
+        button.primary-btn:disabled {
             background-color: var(--progress-bg);
             color: var(--text-secondary);
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
 
     <div class="ingestion-card">
-        <h1>Logbook Scanner</h1>
+        <div class="card-header">
+            <h1>Logbook Scanner</h1>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">🌓</button>
+        </div>
         <p class="subtitle">Securely process visual records into structured data.</p>
 
         <div class="drop-zone" id="drop-zone">
-            <div class="drop-zone-text">Tap to select a document from your gallery</div>
-            <input type="file" id="file-input" accept="image/*" capture="environment">
+            <p class="drop-zone-text">Select your input method</p>
+            <div class="action-buttons">
+                <button class="secondary-btn" id="trigger-camera">📷 Scan Document</button>
+                <button class="secondary-btn" id="trigger-upload">📁 Browse Gallery</button>
+            </div>
+            
+            <input type="file" id="camera-input" accept="image/*" capture="environment">
+            <input type="file" id="file-input" accept="image/*">
         </div>
 
         <div id="file-preview">
             <span id="filename">No document selected</span>
-            <span id="remove-file" style="cursor: pointer; color: #ff5555; padding-left: 10px;">&times;</span>
+            <span id="remove-file" style="cursor: pointer; color: #ff5555; padding-left: 15px; font-weight: bold;">&times;</span>
         </div>
 
         <div class="progress-container" id="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
         </div>
 
-        <button id="process-btn" disabled>Initialize Processing</button>
+        <button class="primary-btn" id="process-btn" disabled>Initialize Processing</button>
     </div>
 
     <script>
+        // --- THEME LOGIC ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const rootElement = document.documentElement;
+        
+        // Check saved preference on load
+        const savedTheme = localStorage.getItem('barchscan_theme') || 'dark';
+        if (savedTheme === 'light') {
+            rootElement.setAttribute('data-theme', 'light');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = rootElement.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                rootElement.removeAttribute('data-theme');
+                localStorage.setItem('barchscan_theme', 'dark');
+            } else {
+                rootElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('barchscan_theme', 'light');
+            }
+        });
+
+        // --- FILE HANDLING LOGIC ---
         const dropZone = document.getElementById('drop-zone');
+        const triggerCamera = document.getElementById('trigger-camera');
+        const triggerUpload = document.getElementById('trigger-upload');
+        const cameraInput = document.getElementById('camera-input');
         const fileInput = document.getElementById('file-input');
+        
         const filePreview = document.getElementById('file-preview');
         const filenameDisplay = document.getElementById('filename');
         const removeFileBtn = document.getElementById('remove-file');
@@ -162,13 +274,19 @@
 
         let currentFile = null;
 
-        dropZone.addEventListener('click', () => fileInput.click());
+        // Route buttons to their respective hidden inputs
+        triggerCamera.addEventListener('click', () => cameraInput.click());
+        triggerUpload.addEventListener('click', () => fileInput.click());
 
-        fileInput.addEventListener('change', (e) => {
+        // Handle file selection from either input
+        const handleInputEvent = (e) => {
             if (e.target.files.length) {
                 handleFileSelection(e.target.files[0]);
             }
-        });
+        };
+
+        cameraInput.addEventListener('change', handleInputEvent);
+        fileInput.addEventListener('change', handleInputEvent);
 
         removeFileBtn.addEventListener('click', resetSelection);
 
@@ -178,7 +296,10 @@
                 return;
             }
             currentFile = file;
-            filenameDisplay.textContent = file.name;
+            // Add a prefix to show if it came from camera or file
+            const sourcePrefix = file.name.includes('image') ? 'Scan_' : 'File_';
+            filenameDisplay.textContent = sourcePrefix + file.name;
+            
             dropZone.style.display = 'none';
             filePreview.style.display = 'flex';
             processBtn.disabled = false;
@@ -186,6 +307,7 @@
 
         function resetSelection() {
             currentFile = null;
+            cameraInput.value = '';
             fileInput.value = '';
             dropZone.style.display = 'block';
             filePreview.style.display = 'none';
@@ -195,7 +317,7 @@
             processBtn.textContent = 'Initialize Processing';
         }
 
-        // Image Compression Engine
+        // --- COMPRESSION & TRANSMISSION LOGIC ---
         function compressImage(file, maxWidth = 1200) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -224,7 +346,7 @@
                                 lastModified: Date.now()
                             });
                             resolve(compressedFile);
-                        }, 'image/jpeg', 0.7); // 70% quality, highly optimized
+                        }, 'image/jpeg', 0.7);
                     };
                 };
             });
@@ -245,7 +367,6 @@
             }, 300);
 
             try {
-                // Compress the image before sending
                 const optimizedFile = await compressImage(currentFile);
                 processBtn.textContent = 'Analyzing with Gemini...';
 
