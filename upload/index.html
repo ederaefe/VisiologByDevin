@@ -47,6 +47,11 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        body.blur-background {
+            filter: blur(8px);
+            pointer-events: none;
+        }
+
         .ingestion-card {
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
@@ -226,9 +231,155 @@
             color: var(--success-color);
             margin-bottom: 1rem;
         }
+
+        /* PASSCODE MODAL STYLES */
+        #passcode-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        #passcode-modal {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        #passcode-modal h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        #passcode-modal p {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .passcode-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        #passcode-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-size: 1rem;
+            letter-spacing: 0.15em;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        #passcode-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #passcode-input::placeholder {
+            color: var(--text-secondary);
+            letter-spacing: normal;
+        }
+
+        .passcode-error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            text-align: center;
+            min-height: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #passcode-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--accent);
+            color: var(--accent-inverse);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        #passcode-btn:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        #passcode-btn:disabled {
+            background-color: var(--glass-border);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+
+    <!-- PASSCODE MODAL -->
+    <div id="passcode-overlay" style="display: none;">
+        <div id="passcode-modal">
+            <h2>🔐 Access Required</h2>
+            <p>Enter the passcode to continue</p>
+            <div class="passcode-input-group">
+                <input 
+                    type="password" 
+                    id="passcode-input" 
+                    placeholder="Enter passcode"
+                    autocomplete="off"
+                >
+            </div>
+            <div class="passcode-error" id="passcode-error"></div>
+            <button id="passcode-btn" class="primary-btn">Verify</button>
+        </div>
+    </div>
 
     <div class="ingestion-card">
         <div class="card-header">
@@ -274,6 +425,113 @@
     </div>
 
     <script>
+        // PASSCODE AUTHENTICATION
+        const passcodeOverlay = document.getElementById('passcode-overlay');
+        const passcodeInput = document.getElementById('passcode-input');
+        const passcodeBtn = document.getElementById('passcode-btn');
+        const passcodeError = document.getElementById('passcode-error');
+        const body = document.body;
+
+        let attemptCount = 0;
+        const MAX_ATTEMPTS = 4;
+        const SESSION_KEY = 'barchscan_authenticated';
+
+        // Check if user is already authenticated in this session
+        function isAuthenticated() {
+            return sessionStorage.getItem(SESSION_KEY) === 'true';
+        }
+
+        // Set session as authenticated
+        function setAuthenticated() {
+            sessionStorage.setItem(SESSION_KEY, 'true');
+        }
+
+        // Show passcode modal
+        function showPasscodeModal() {
+            passcodeOverlay.style.display = 'flex';
+            body.classList.add('blur-background');
+            passcodeInput.focus();
+            attemptCount = 0;
+            passcodeError.textContent = '';
+            passcodeInput.value = '';
+        }
+
+        // Hide passcode modal
+        function hidePasscodeModal() {
+            passcodeOverlay.style.display = 'none';
+            body.classList.remove('blur-background');
+        }
+
+        // Validate passcode with server
+        async function validatePasscode(passcode) {
+            try {
+                const response = await fetch('/api/validate-passcode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passcode })
+                });
+
+                const data = await response.json();
+                return data.valid === true;
+            } catch (error) {
+                console.error('Passcode validation error:', error);
+                return false;
+            }
+        }
+
+        // Handle passcode submission
+        passcodeBtn.addEventListener('click', async () => {
+            const passcode = passcodeInput.value.trim();
+            
+            if (!passcode) {
+                passcodeError.textContent = 'Please enter a passcode.';
+                return;
+            }
+
+            passcodeBtn.disabled = true;
+            passcodeBtn.innerHTML = '<span class="spinner"></span>Verifying...';
+
+            const isValid = await validatePasscode(passcode);
+
+            if (isValid) {
+                setAuthenticated();
+                hidePasscodeModal();
+                passcodeBtn.disabled = false;
+                passcodeBtn.textContent = 'Verify';
+                attemptCount = 0;
+            } else {
+                attemptCount++;
+                const attemptsLeft = MAX_ATTEMPTS - attemptCount;
+
+                if (attemptsLeft > 0) {
+                    passcodeError.textContent = `Incorrect passcode. Try again ${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} left`;
+                    passcodeInput.value = '';
+                    passcodeInput.focus();
+                } else {
+                    passcodeError.textContent = 'Maximum attempts exceeded. Access denied.';
+                    passcodeBtn.disabled = true;
+                }
+
+                passcodeBtn.disabled = false;
+                passcodeBtn.textContent = 'Verify';
+            }
+        });
+
+        // Allow Enter key to submit
+        passcodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !passcodeBtn.disabled) {
+                passcodeBtn.click();
+            }
+        });
+
+        // Initialize passcode check on page load
+        window.addEventListener('load', () => {
+            if (!isAuthenticated()) {
+                showPasscodeModal();
+            }
+        });
+
+        // EXISTING CODE
         const themeToggle = document.getElementById('theme-toggle');
         const rootElement = document.documentElement;
         
