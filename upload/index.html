@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BarchScan | Ingestion</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -49,6 +48,9 @@
         }
 
         .ingestion-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             padding: 2.5rem 1.5rem;
@@ -58,17 +60,6 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            z-index: 1;
-        }
-
-        .ingestion-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            z-index: -1;
         }
 
         .card-header {
@@ -243,23 +234,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        #passcode-overlay::before {
-            content: '';
-            position: absolute;
-            inset: 0;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(3px);
             -webkit-backdrop-filter: blur(3px);
-            z-index: -1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
         }
 
         #passcode-modal {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 2.5rem 2rem;
@@ -269,17 +257,6 @@
             animation: slideUp 0.3s ease;
             position: relative;
             z-index: 10001;
-        }
-
-        #passcode-modal::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: inherit;
-            z-index: -1;
         }
 
         @keyframes slideUp {
@@ -398,18 +375,11 @@
             position: absolute;
             width: 50%;
             height: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 10000;
-        }
-
-        .gate-door::before {
-            content: '';
-            position: absolute;
-            inset: 0;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            z-index: -1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 10000;
         }
 
         .door-left {
@@ -472,36 +442,6 @@
             font-weight: 500;
             letter-spacing: 0.1em;
         }
-
-        /* SESSION TIMEOUT BANNER */
-        #session-timeout-banner {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            border-top: 1px solid rgba(255, 85, 85, 0.3);
-            padding: 1rem;
-            text-align: center;
-            color: var(--error-color);
-            font-size: 0.9rem;
-            z-index: 9998;
-            display: none;
-        }
-
-        #session-timeout-banner::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 85, 85, 0.1);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: -1;
-        }
-
-        #session-timeout-banner.show {
-            display: block;
-            animation: slideUp 0.3s ease;
-        }
     </style>
 </head>
 <body>
@@ -532,11 +472,6 @@
             <div class="gate-spinner"></div>
             <div id="gate-text">VERIFYING...</div>
         </div>
-    </div>
-
-    <!-- SESSION TIMEOUT BANNER -->
-    <div id="session-timeout-banner">
-        Session expires in <span id="timeout-minutes">60</span>m. <a href="#" onclick="extendSession(); return false;" style="color: inherit; text-decoration: underline;">Extend</a>
     </div>
 
     <div class="ingestion-card">
@@ -583,93 +518,26 @@
     </div>
 
     <script>
-        // PASSCODE AUTHENTICATION WITH 1-HOUR SESSION TIMEOUT
+        // PASSCODE AUTHENTICATION
         const passcodeOverlay = document.getElementById('passcode-overlay');
         const passcodeInput = document.getElementById('passcode-input');
         const passcodeBtn = document.getElementById('passcode-btn');
         const passcodeError = document.getElementById('passcode-error');
         const accessGate = document.getElementById('access-gate');
         const gateText = document.getElementById('gate-text');
-        const sessionBanner = document.getElementById('session-timeout-banner');
-        const timeoutMinutes = document.getElementById('timeout-minutes');
 
         let attemptCount = 0;
         const MAX_ATTEMPTS = 4;
         const SESSION_KEY = 'barchscan_authenticated';
-        const SESSION_TIMESTAMP_KEY = 'barchscan_session_time';
-        const SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-        let sessionTimeoutInterval = null;
-        let warningShown = false;
 
         // Check if user is already authenticated in this session
         function isAuthenticated() {
-            const authenticated = sessionStorage.getItem(SESSION_KEY) === 'true';
-            const sessionTime = parseInt(sessionStorage.getItem(SESSION_TIMESTAMP_KEY)) || 0;
-            const now = Date.now();
-
-            // Check if session has expired
-            if (authenticated && (now - sessionTime) > SESSION_DURATION) {
-                clearSession();
-                return false;
-            }
-
-            return authenticated;
+            return sessionStorage.getItem(SESSION_KEY) === 'true';
         }
 
         // Set session as authenticated
         function setAuthenticated() {
             sessionStorage.setItem(SESSION_KEY, 'true');
-            sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
-            startSessionTimer();
-        }
-
-        // Clear session
-        function clearSession() {
-            sessionStorage.removeItem(SESSION_KEY);
-            sessionStorage.removeItem(SESSION_TIMESTAMP_KEY);
-            warningShown = false;
-            if (sessionTimeoutInterval) clearInterval(sessionTimeoutInterval);
-            sessionBanner.classList.remove('show');
-        }
-
-        // Start session timeout timer
-        function startSessionTimer() {
-            if (sessionTimeoutInterval) clearInterval(sessionTimeoutInterval);
-
-            sessionTimeoutInterval = setInterval(() => {
-                const sessionTime = parseInt(sessionStorage.getItem(SESSION_TIMESTAMP_KEY)) || 0;
-                const now = Date.now();
-                const elapsed = now - sessionTime;
-                const remaining = SESSION_DURATION - elapsed;
-
-                // Show warning at 10 minutes remaining
-                if (remaining < 10 * 60 * 1000 && remaining > 0 && !warningShown) {
-                    warningShown = true;
-                    sessionBanner.classList.add('show');
-                    updateTimeoutDisplay(remaining);
-                } else if (remaining > 10 * 60 * 1000) {
-                    updateTimeoutDisplay(remaining);
-                }
-
-                // Session expired
-                if (remaining <= 0) {
-                    clearSession();
-                    alert('Your session has expired. Please log in again.');
-                    location.reload();
-                }
-            }, 1000);
-        }
-
-        // Update timeout display
-        function updateTimeoutDisplay(milliseconds) {
-            const minutes = Math.ceil(milliseconds / 60000);
-            timeoutMinutes.textContent = minutes;
-        }
-
-        // Extend session
-        function extendSession() {
-            setAuthenticated();
-            sessionBanner.classList.remove('show');
         }
 
         // Show passcode modal
@@ -775,8 +643,6 @@
         window.addEventListener('load', () => {
             if (!isAuthenticated()) {
                 showPasscodeModal();
-            } else {
-                startSessionTimer();
             }
         });
 
