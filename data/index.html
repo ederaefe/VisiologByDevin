@@ -187,6 +187,7 @@
             <div class="action-group" id="action-buttons" style="display: none;">
                 <button class="action-btn" id="toggle-edit">Enter Edit Mode</button>
                 <button class="action-btn" id="export-csv">Download CSV</button>
+                <button class="action-btn" id="export-json">Download JSON</button>
             </div>
         </header>
 
@@ -219,29 +220,29 @@
         const actionButtons = document.getElementById('action-buttons');
         
         const exportBtn = document.getElementById('export-csv');
+        const exportJsonBtn = document.getElementById('export-json');
         const toggleEditBtn = document.getElementById('toggle-edit');
 
         let logbookData = [];
         let currentHeaders = [];
         let isEditMode = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const storedData = localStorage.getItem('barchscan_latest_data');
-            
-            if (storedData) {
-                try {
-                    const parsed = JSON.parse(storedData);
-                    logbookData = Array.isArray(parsed) ? parsed : [parsed];
-                    
-                    if (logbookData.length > 0) {
-                        buildDynamicTable(logbookData);
-                        emptyState.style.display = 'none';
-                        tableContainer.style.display = 'block';
-                        actionButtons.style.display = 'flex';
-                    }
-                } catch (e) {
-                    console.error("Could not parse stored data", e);
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/get-logbook');
+                if (!response.ok) throw new Error('Failed to fetch data');
+                
+                const parsed = await response.json();
+                logbookData = Array.isArray(parsed) ? parsed : [parsed];
+                
+                if (logbookData.length > 0) {
+                    buildDynamicTable(logbookData);
+                    emptyState.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                    actionButtons.style.display = 'flex';
                 }
+            } catch (e) {
+                console.error("Could not retrieve logbook data", e);
             }
         });
 
@@ -299,7 +300,7 @@
             }
         });
 
-        function saveTableToMemory() {
+        async function saveTableToMemory() {
             const rows = Array.from(tableBody.querySelectorAll('tr'));
             const newData = rows.map(tr => {
                 const rowObj = {};
@@ -311,7 +312,24 @@
             });
             
             logbookData = newData;
-            localStorage.setItem('barchscan_latest_data', JSON.stringify(logbookData));
+            
+            toggleEditBtn.disabled = true;
+            toggleEditBtn.textContent = 'Saving...';
+            
+            try {
+                const response = await fetch('/api/update-logbook', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(logbookData)
+                });
+                if (!response.ok) throw new Error('Failed to save to database');
+            } catch (e) {
+                console.error('Error saving data:', e);
+                alert('There was an error saving your changes to the database.');
+            } finally {
+                toggleEditBtn.disabled = false;
+                toggleEditBtn.textContent = 'Enter Edit Mode';
+            }
         }
 
         // 3. DYNAMIC CSV EXPORT
@@ -336,6 +354,24 @@
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
             link.setAttribute('download', 'barchscan_log.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // 4. JSON EXPORT
+        exportJsonBtn.addEventListener('click', () => {
+            if (logbookData.length === 0) return;
+            
+            const jsonContent = JSON.stringify(logbookData, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const link = document.createElement('a');
+            
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'barchscan_log.json');
             link.style.visibility = 'hidden';
             
             document.body.appendChild(link);

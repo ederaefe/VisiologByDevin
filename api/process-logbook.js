@@ -75,7 +75,12 @@ export default async function handler(req, res) {
         
         // 7. Sanitize the response to strip out any residual markdown
         const sanitizedOutput = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const structuredData = JSON.parse(sanitizedOutput);
+        let structuredData = JSON.parse(sanitizedOutput);
+        
+        // Ensure structuredData is an array
+        if (!Array.isArray(structuredData)) {
+            structuredData = [structuredData];
+        }
 
         // 8. Clean up the temporary file created by Formidable
         try {
@@ -84,7 +89,49 @@ export default async function handler(req, res) {
             console.warn("Could not remove temporary file:", cleanupError);
         }
 
-        // 9. Return the finalized data
+        // 9. Append to JSONBin Real-time Database
+        const { JSONBIN_MASTER_KEY, JSONBIN_ACCESS_KEY, JSONBIN_BIN_ID } = process.env;
+        
+        if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+            try {
+                // Fetch current data
+                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    headers: { 'X-Access-Key': JSONBIN_ACCESS_KEY || JSONBIN_MASTER_KEY }
+                });
+                
+                let currentData = [];
+                if (getRes.ok) {
+                    const parsedRes = await getRes.json();
+                    currentData = parsedRes.record || [];
+                    if (!Array.isArray(currentData)) currentData = [];
+                }
+
+                // Append new data
+                const mergedData = [...currentData, ...structuredData];
+
+                // PUT updated data back
+                const putRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify(mergedData)
+                });
+
+                if (!putRes.ok) {
+                    console.error("Failed to update JSONBin:", await putRes.text());
+                } else {
+                    // Overwrite response with merged data so client has latest state
+                    structuredData = mergedData;
+                }
+            } catch (dbError) {
+                console.error("Database Error:", dbError);
+                // Non-fatal, continue and return the processed data
+            }
+        }
+
+        // 10. Return the finalized data
         return res.status(200).json(structuredData);
 
     } catch (error) {

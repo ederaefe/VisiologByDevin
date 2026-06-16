@@ -811,10 +811,8 @@
                     throw new Error("Generic failure."); 
                 }
 
-                // Silently parse and cache the data for local routing/admin use.
                 // The uploader is not redirected, maintaining the security boundary.
                 const result = await response.json();
-                localStorage.setItem('barchscan_latest_data', JSON.stringify(result));
                 
                 clearInterval(timerInterval);
                 loadingCircle.style.strokeDashoffset = 0;
