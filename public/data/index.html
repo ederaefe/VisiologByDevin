@@ -604,7 +604,7 @@
             z-index: 1;
             width: 100%;
             transition: all var(--duration-med) ease;
-            max-height: calc(100vh - 300px);
+            max-height: calc(100vh - 320px);
             overflow-y: auto;
         }
 
@@ -1397,7 +1397,7 @@
                 width: 120px;
             }
             .table-wrapper {
-                max-height: calc(100vh - 400px);
+                max-height: calc(100vh - 420px);
             }
         }
 
@@ -1497,15 +1497,17 @@
             font-weight: 400;
         }
 
-        /* ===== CLOUDINARY PANEL ===== */
+        /* ===== CLOUDINARY PANEL (floating) ===== */
         #cloudinary-panel {
             display: none;
             background: var(--glass-bg);
             backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-md);
             padding: 0.75rem 1rem;
             margin-top: 2px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
         }
         #cloudinary-panel.visible {
             display: block;
@@ -1580,6 +1582,92 @@
         .cloudinary-item .actions .delete-btn:hover {
             background: rgba(255, 85, 85, 0.1);
             border-color: var(--error-color);
+        }
+
+        /* ===== DINO GAME (subtle) ===== */
+        #dino-game-container {
+            display: none;
+            margin-top: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            background: var(--bg-color);
+            position: relative;
+            touch-action: none;
+        }
+        #dino-game-container.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        #dino-game-container canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 320 / 160;
+            background: var(--bg-color);
+            touch-action: none;
+        }
+        .dino-score {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-family: var(--font-mono, monospace);
+            letter-spacing: 0.05em;
+        }
+        .dino-hint {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.55rem;
+            color: var(--text-muted, #666);
+            opacity: 0.6;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #dino-toggle {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            touch-action: manipulation;
+            z-index: 5;
+        }
+        #dino-toggle:hover {
+            background: var(--hover-overlay);
+            color: var(--text-primary);
+        }
+        #dino-toggle:active {
+            transform: scale(0.88);
+        }
+        #dino-toggle .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--success-color);
+            color: #000;
+            font-size: 0.5rem;
+            font-weight: 700;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -1909,6 +1997,10 @@ Click 'Run' to execute."></textarea>
                         </svg>
                     </button>
                     <div class="dropdown-menu" id="more-actions-dropdown">
+                        <div class="dropdown-item" id="dropdown-new-sheet">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                            New Sheet
+                        </div>
                         <div class="dropdown-item" id="dropdown-export-btn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Export
@@ -2013,7 +2105,7 @@ Click 'Run' to execute."></textarea>
                 <button id="filter-clear-btn">✕ Clear</button>
             </div>
 
-            <!-- Cloudinary Panel -->
+            <!-- Cloudinary Panel (floating) -->
             <div id="cloudinary-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                     <h3 style="font-size: 0.95rem; font-weight: 600;">
@@ -2765,9 +2857,10 @@ Click 'Run' to execute."></textarea>
             showToast(`Sheet "${name}" deleted`, 'success');
         }
 
-        document.getElementById('new-sheet-btn').addEventListener('click', () => {
+        document.getElementById('dropdown-new-sheet').addEventListener('click', function() {
             const name = prompt('Enter sheet name:');
             if (name) createSheet(name.trim());
+            document.getElementById('more-actions-dropdown').classList.remove('open');
         });
 
         const origSaveToMemory = saveTableToMemory;
@@ -4001,17 +4094,7 @@ Click 'Run' to execute."></textarea>
             }
         }
 
-            {
-  "name": "BarchScan",
-  "short_name": "BarchScan",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0b0b0e",
-  "theme_color": "#5b9cf5",
-  "icons": []
-}
-    
-
+        
     </script>
 </body>
 </html>
