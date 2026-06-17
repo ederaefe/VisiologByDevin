@@ -743,6 +743,14 @@ Click 'Run' to execute."></textarea>
             </div>
         </div>
 
+        <button class="action-btn" id="reload-db-btn" title="Reload database">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/>
+        <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/>
+    </svg>
+</button>
+        
         <div class="action-group" id="action-buttons" style="display:none">
             <!-- Edit mode toggle (Save Changes icon only) -->
             <button class="action-btn" id="toggle-edit" title="Edit Mode">
@@ -1098,7 +1106,8 @@ function switchSheet(name) {
     tableContainer.style.display = logbookData.length ? 'block' : 'none';
     updateSheetList();
     undoStack.length = 0; redoStack.length = 0; updateUndoRedo();
-}
+
+    
 
 function createSheet(name) {
     if (!name) return;
@@ -1607,6 +1616,10 @@ document.getElementById('ctx-delrow').addEventListener('click', () => {
     renumberSN();
     showToast(`Deleted ${rows.size} row(s).`, 'info');
 });
+
+
+
+    
 
 function copySelection() {
     if (selectedCells.size === 0) return;
@@ -2171,6 +2184,17 @@ tableHead.addEventListener('blur', (e) => {
         th.dataset._editTracked = '';
     }
 }, true);
+
+    document.getElementById('reload-db-btn').addEventListener('click', async (e) => {
+    e.preventDefault();                    // just to be absolutely safe
+    try {
+        await loadLogbookData();
+        showToast('Database reloaded', 'success');
+    } catch (err) {
+        showToast('Reload failed', 'error');
+        console.error(err);
+    }
+});
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
