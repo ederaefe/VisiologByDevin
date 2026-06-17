@@ -4124,6 +4124,205 @@ window.alert = function(message) {
     if (msgEl) msgEl.textContent = String(message);
     overlay.style.display = 'flex';
 };
+
+
+        // ============================================================
+// CUSTOM ALERT – replaces browser alert with UI modal
+// ============================================================
+window.originalAlert = window.alert;
+window.alert = function(message) {
+    let overlay = document.getElementById('custom-alert-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'custom-alert-overlay';
+        overlay.className = 'modal-overlay';
+        overlay.style.display = 'flex';
+        overlay.innerHTML = `
+            <div class="modal-box" style="max-width:400px;">
+                <p id="custom-alert-message" style="margin-bottom:1.5rem; word-break:break-word;"></p>
+                <div class="modal-btn-row" style="justify-content:center;">
+                    <button class="modal-btn primary" id="custom-alert-ok">OK</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('#custom-alert-ok').addEventListener('click', function() {
+            overlay.style.display = 'none';
+        });
+    }
+    const msgEl = overlay.querySelector('#custom-alert-message');
+    if (msgEl) msgEl.textContent = String(message);
+    overlay.style.display = 'flex';
+};
+
+// ============================================================
+// ANALYZE LOG – anomaly + duplicate detection
+// ============================================================
+
+// ---- Add "Analyze" button to header ----
+(function addAnalyzeButton() {
+    const headerActions = document.querySelector('.header-actions');
+    if (!headerActions) return;
+    
+    // Check if button already exists
+    if (document.getElementById('analyze-log-btn')) return;
+    
+    const analyzeBtn = document.createElement('button');
+    analyzeBtn.className = 'action-btn';
+    analyzeBtn.id = 'analyze-log-btn';
+    analyzeBtn.title = 'Run anomaly & duplicate detection on current data';
+    analyzeBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Analyze
+    `;
+    analyzeBtn.addEventListener('click', analyzeLogbook);
+    
+    // Insert before logout button if exists, else append
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        headerActions.insertBefore(analyzeBtn, logoutBtn);
+    } else {
+        headerActions.appendChild(analyzeBtn);
+    }
+})();
+
+// ---- Analysis function ----
+async function analyzeLogbook() {
+    // Check if logbookData exists and has data
+    if (typeof logbookData === 'undefined' || !logbookData || logbookData.length === 0) {
+        showToast('No data to analyze. Load some records first.', 'error');
+        return;
+    }
+    
+    const btn = document.getElementById('analyze-log-btn');
+    if (!btn) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Analyzing...';
+    
+    try {
+        const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: logbookData })
+        });
+        
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || 'Analysis failed');
+        }
+        
+        const results = await response.json();
+        displayAnalysisResults(results);
+        showToast(`Analysis complete: ${results.anomaly_count || 0} anomalies, ${results.duplicate_count || 0} duplicates.`, 'info');
+        
+    } catch (err) {
+        console.error('Analysis error:', err);
+        showToast('Analysis error: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Analyze
+        `;
+    }
+}
+
+// ---- Display results in a modal ----
+function displayAnalysisResults(results) {
+    let modal = document.getElementById('analysis-results-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'analysis-results-modal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-box" style="max-width:650px; max-height:80vh; overflow-y:auto;">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    Analysis Results
+                </h2>
+                <div id="analysis-content"></div>
+                <div class="modal-btn-row" style="margin-top:1rem;">
+                    <button class="modal-btn primary" id="analysis-close">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#analysis-close').addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        // Close on overlay click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    }
+    
+    const content = modal.querySelector('#analysis-content');
+    let html = '';
+    
+    // ---- Anomalies ----
+    const anomalyCount = results.anomaly_count || 0;
+    if (anomalyCount > 0) {
+        html += `<h3 style="color:var(--error); margin-top:0.5rem;">⚠️ Anomalies Found (${anomalyCount})</h3>`;
+        html += `<div style="max-height:200px; overflow-y:auto; margin-bottom:1rem; font-size:0.75rem;">`;
+        results.anomalies.forEach((row, idx) => {
+            html += `<div style="padding:4px 6px; border-bottom:1px solid var(--glass-border);">`;
+            html += `<strong>#${idx+1}</strong> `;
+            const entries = Object.entries(row).filter(([k]) => k !== 'anomaly');
+            html += entries.map(([k,v]) => `${k}=<span style="color:var(--text-secondary);">${v}</span>`).join(' · ');
+            html += `</div>`;
+        });
+        html += `</div>`;
+    } else {
+        html += `<p style="color:var(--success);">✅ No anomalies detected in numeric columns.</p>`;
+    }
+    
+    // ---- Duplicates ----
+    const dupCount = results.duplicate_count || 0;
+    if (dupCount > 0) {
+        html += `<h3 style="color:var(--warning); margin-top:0.5rem;">🔄 Near-Duplicates Found (${dupCount})</h3>`;
+        html += `<div style="max-height:200px; overflow-y:auto; margin-bottom:1rem; font-size:0.7rem;">`;
+        results.duplicates.forEach((dup, idx) => {
+            html += `<div style="padding:4px 6px; border-bottom:1px solid var(--glass-border);">`;
+            html += `<strong>Pair #${idx+1}</strong> <span style="color:var(--text-secondary);">${Math.round(dup.similarity)}% match</span><br>`;
+            html += `<span style="color:var(--text-muted);">Row1:</span> ${JSON.stringify(dup.row1)}<br>`;
+            html += `<span style="color:var(--text-muted);">Row2:</span> ${JSON.stringify(dup.row2)}`;
+            html += `</div>`;
+        });
+        html += `</div>`;
+    } else {
+        html += `<p style="color:var(--success);">✅ No near-duplicates found in text columns.</p>`;
+    }
+    
+    // ---- Summary Stats ----
+    if (results.summary && Object.keys(results.summary).length > 0) {
+        html += `<h3 style="margin-top:0.5rem;">📊 Numeric Summary</h3>`;
+        html += `<div style="font-size:0.7rem; background:var(--bg-surface); padding:0.5rem; border-radius:4px; overflow-x:auto;">`;
+        html += `<table style="width:100%; border-collapse:collapse; font-size:0.7rem;">`;
+        html += `<tr><th style="text-align:left;padding:2px 6px;">Column</th><th style="text-align:right;padding:2px 6px;">Mean</th><th style="text-align:right;padding:2px 6px;">Std</th><th style="text-align:right;padding:2px 6px;">Min</th><th style="text-align:right;padding:2px 6px;">Max</th></tr>`;
+        Object.entries(results.summary).forEach(([col, stats]) => {
+            html += `<tr><td style="padding:2px 6px;">${col}</td>`;
+            html += `<td style="text-align:right;padding:2px 6px;">${stats.mean.toFixed(2)}</td>`;
+            html += `<td style="text-align:right;padding:2px 6px;">${stats.std.toFixed(2)}</td>`;
+            html += `<td style="text-align:right;padding:2px 6px;">${stats.min.toFixed(2)}</td>`;
+            html += `<td style="text-align:right;padding:2px 6px;">${stats.max.toFixed(2)}</td></tr>`;
+        });
+        html += `</table></div>`;
+    }
+    
+    // ---- Total records ----
+    html += `<p style="margin-top:0.5rem; font-size:0.75rem; color:var(--text-secondary);">Total records analyzed: ${results.total_records || logbookData.length}</p>`;
+    
+    content.innerHTML = html;
+    modal.style.display = 'flex';
+}
         
     </script>
 </body>
