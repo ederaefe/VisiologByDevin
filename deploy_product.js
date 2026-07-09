@@ -23,6 +23,8 @@ function copyFolderSync(from, to) {
 }
 
 try {
+  console.log('Installing dependencies in product-page/...');
+  execSync('npm install', { cwd: reactAppDir, stdio: 'inherit' });
   console.log('Building React product page in product-page/...');
   execSync('npm run build', { cwd: reactAppDir, stdio: 'inherit' });
   console.log('Build completed successfully.');
