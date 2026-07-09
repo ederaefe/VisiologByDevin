@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { mdToPdf } from 'md-to-pdf';
+import { fileURLToPath } from 'url';
 
-const docsDir = 'c:/Users/T14 GEN 5/Documents/barchscan-app/docs';
+const __filename = fileURLToPath(import.meta.url);
+const docsDir = path.dirname(__filename);
 const mdPath = path.join(docsDir, 'BUSINESS_PLAN.md');
 const sanMdPath = path.join(docsDir, 'BUSINESS_PLAN_SAN.md');
 const pdfPath = path.join(docsDir, 'BUSINESS_PLAN.pdf');

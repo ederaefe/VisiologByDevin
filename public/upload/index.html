@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>BarchScan · Ingestion</title>
+    <title>Visiolog · Ingestion</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
         /* ----- RESET & BASE (mobile-first) ----- */
@@ -864,7 +864,7 @@
                     <path d="M8 16l4-4 4 4" />
                     <path d="M8 8l4 4 4-4" />
                 </svg>
-                BarchScan
+                Visiolog
             </h1>
             <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
                 <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -977,7 +977,7 @@
             const error = document.getElementById('passcode-error');
             const gate = document.getElementById('access-gate');
             const gateText = document.getElementById('gate-text');
-            const SESSION_KEY = 'barchscan_authenticated';
+            const SESSION_KEY = 'visiolog_authenticated';
 
             let attempts = 0;
             const MAX_ATTEMPTS = 4;
@@ -1078,16 +1078,16 @@
         (function() {
             const root = document.documentElement;
             const btn = document.getElementById('theme-toggle');
-            const saved = localStorage.getItem('barchscan_theme') || 'dark';
+            const saved = localStorage.getItem('visiolog_theme') || 'dark';
             if (saved === 'light') root.setAttribute('data-theme', 'light');
 
             btn.addEventListener('click', () => {
                 if (root.getAttribute('data-theme') === 'light') {
                     root.removeAttribute('data-theme');
-                    localStorage.setItem('barchscan_theme', 'dark');
+                    localStorage.setItem('visiolog_theme', 'dark');
                 } else {
                     root.setAttribute('data-theme', 'light');
-                    localStorage.setItem('barchscan_theme', 'light');
+                    localStorage.setItem('visiolog_theme', 'light');
                 }
             });
         })();
@@ -1546,7 +1546,7 @@
         // ================================================================
         // INIT
         // ================================================================
-        console.log('BarchScan Ingestion · Mobile-optimized with mini-game');
+        console.log('Visiolog Ingestion · Mobile-optimized with mini-game');
         console.log('Passcode: simple text input, no password save');
         console.log('Doors: slower animation (1.2s)');
         console.log('Ping: every 3s, status updates');

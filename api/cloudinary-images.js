@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   try {
     const result = await cloudinary.v2.api.resources({
       type: 'upload',
-      prefix: 'barchscan',    // folder name – adjust if needed
+      prefix: 'visiolog',    // folder name – adjust if needed
       max_results: 50,
     });
     const images = result.resources.map(({ public_id, secure_url, format, bytes, created_at }) => ({

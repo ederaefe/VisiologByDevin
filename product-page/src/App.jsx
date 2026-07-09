@@ -64,7 +64,7 @@ function App() {
       <nav className="navbar" role="navigation" aria-label="Main Navigation">
         <div className="container">
           <div className="logo-container">
-            <span className="logo-text">BarchScan</span>
+            <span className="logo-text">VISIOLOG</span>
           </div>
           <div className="nav-links">
             <a href="#how-it-works" className="nav-link">Workflow</a>
@@ -83,7 +83,7 @@ function App() {
             Transform physical structured records into <em>encrypted</em>, action-ready data.
           </h1>
           <p className="hero-subtitle">
-            BarchScan is the intelligent records platform. Photograph any paper sheet, review the structural AI suggestion, and store your business records in an isolated, regulatory-grade encrypted archive.
+            VISIOLOG is the intelligent records platform. Photograph any paper sheet, review the structural AI suggestion, and store your business records in an isolated, regulatory-grade encrypted archive.
           </p>
           <div className="hero-actions">
             <a href="/upload" className="btn btn-primary" id="hero-cta-launch">Launch Free Scan</a>
@@ -281,7 +281,7 @@ function App() {
           <div className="section-header">
             <h2 className="section-title">Cryptographic Security By Default</h2>
             <p className="section-desc">
-              Data privacy is not a feature tier—it is the foundational premise of BarchScan.
+              Data privacy is not a feature tier—it is the foundational premise of VISIOLOG.
             </p>
           </div>
 
@@ -302,7 +302,7 @@ function App() {
               </div>
               <h3 className="security-card-title">Session Isolation</h3>
               <p className="security-card-desc">
-                Sessions are strictly isolated and containerized. BarchScan enforces session IDs on all database and AI queries to guarantee absolute tenant boundary protection.
+                Sessions are strictly isolated and containerized. VISIOLOG enforces session IDs on all database and AI queries to guarantee absolute tenant boundary protection.
               </p>
             </div>
 
@@ -324,7 +324,7 @@ function App() {
         <div className="container">
           <div className="footer-top">
             <div className="footer-brand">
-              <span className="logo-text">BarchScan</span>
+              <span className="logo-text">VISIOLOG</span>
               <p className="footer-desc">
                 The Intelligent Records Platform for modern operational alignment. Replacing manual paper entries with immediate structured intelligence.
               </p>
@@ -345,7 +345,7 @@ function App() {
           </div>
 
           <div className="footer-bottom">
-            <span>&copy; {new Date().getFullYear()} BarchScan. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} VISIOLOG. All rights reserved.</span>
             <span>Security Statement &middot; Privacy Policy &middot; Terms of Service</span>
           </div>
         </div>

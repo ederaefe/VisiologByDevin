@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const rootDir = 'c:/Users/T14 GEN 5/Documents/barchscan-app';
+const rootDir = process.cwd();
 const reactAppDir = path.join(rootDir, 'product-page');
 const publicDir = path.join(rootDir, 'public');
 const publicAssetsDir = path.join(publicDir, 'assets');

@@ -1,9 +1,9 @@
-# BarchScan — System Design Document
+# VISIOLOG — System Design Document
 
 | Field              | Value                                                  |
 |--------------------|--------------------------------------------------------|
 | **Document Type**  | Software Architecture / System Design                  |
-| **System**         | BarchScan — Intelligent Document Digitizer & Data Analytics Platform |
+| **System**         | VISIOLOG — Intelligent Document Digitizer & Data Analytics Platform |
 | **Version**        | 2.0                                                    |
 | **Date**           | June 2026                                              |
 | **Status**         | Active                                                 |
@@ -25,6 +25,10 @@
 11. [External Dependencies](#11-external-dependencies)
 12. [Constraints & Limitations](#12-constraints--limitations)
 13. [Glossary](#13-glossary)
+14. [UI/UX System Specifications](#14-uiux-system-specifications)
+15. [Frontend Architecture Details](#15-frontend-architecture-details)
+16. [Concrete Integration Specifications](#16-concrete-integration-specifications)
+17. [Engineering-Ready System Outputs](#17-engineering-ready-system-outputs)
 
 ---
 
@@ -32,11 +36,11 @@
 
 ### 1.1 Purpose
 
-This document describes the software architecture and design of **BarchScan**, a two-tier SaaS platform for digitizing physical logbook records and analyzing operational data. It serves as the single source of truth for understanding the system's structure, data flow, component responsibilities, interfaces, and design rationale.
+This document describes the software architecture and design of **VISIOLOG**, a two-tier SaaS platform for digitizing physical logbook records and analyzing operational data. It serves as the single source of truth for understanding the system's structure, data flow, component responsibilities, interfaces, and design rationale.
 
 ### 1.2 Scope
 
-BarchScan addresses the problem of converting handwritten or printed logbook pages into structured, searchable, editable digital data — and then turning that data into actionable intelligence. The system:
+VISIOLOG addresses the problem of converting handwritten or printed logbook pages into structured, searchable, editable digital data — and then turning that data into actionable intelligence. The system:
 
 - Accepts photographs of logbook pages (camera capture or file upload).
 - Uses AI-powered vision models to extract structured tabular data from the images.
@@ -47,11 +51,11 @@ BarchScan addresses the problem of converting handwritten or printed logbook pag
 
 ### 1.3 Terminology Note
 
-BarchScan operates on **Records** — a deliberately broad term. A "record" is any structured physical document: a logbook, a register, a patrol sheet, an inspection form, a lab notebook, a stock count, or any tabular paper document. This is intentional: the platform serves any sector that generates paper-based structured data.
+VISIOLOG operates on **Records** — a deliberately broad term. A "record" is any structured physical document: a logbook, a register, a patrol sheet, an inspection form, a lab notebook, a stock count, or any tabular paper document. This is intentional: the platform serves any sector that generates paper-based structured data.
 
 ### 1.4 Intended Audience
 
-- Developers maintaining or extending BarchScan.
+- Developers maintaining or extending VISIOLOG.
 - Stakeholders reviewing the system design.
 - New contributors onboarding to the codebase.
 
@@ -59,7 +63,7 @@ BarchScan operates on **Records** — a deliberately broad term. A "record" is a
 
 | Term                  | Definition                                                                                          |
 |-----------------------|-----------------------------------------------------------------------------------------------------|
-| Record                | Any physical structured document digitized via BarchScan (logbooks, registers, forms, etc.).        |
+| Record                | Any physical structured document digitized via VISIOLOG (logbooks, registers, forms, etc.).        |
 | Ingestion             | The process of uploading and extracting data from a logbook image.                                  |
 | Records Vault            | Tier 1 product — the encrypted digital archive at `/data` for storing, retrieving, and managing records. |
 | Intelligence Engine | Tier 2 product — manual + AI-assisted analytics suite with data upload and chat-based insights.      |
@@ -82,7 +86,7 @@ Organizations that maintain physical records — operations logs, attendance reg
 
 ### 2.2 Solution
 
-BarchScan combines a mobile-optimized capture interface with Google's Gemini 2.5 Flash vision model to intelligently extract structured data from photographed pages. The system operates as a **two-tier SaaS platform**:
+VISIOLOG combines a mobile-optimized capture interface with Google's Gemini 2.5 Flash vision model to intelligently extract structured data from photographed pages. The system operates as a **two-tier SaaS platform**:
 
 **Tier 1 — Records Vault ($8/month)**:
 1. Learns the schema from previously ingested records.
@@ -151,7 +155,7 @@ BarchScan combines a mobile-optimized capture interface with Google's Gemini 2.5
 
 ### 3.1 Tier Overview
 
-BarchScan operates on a two-tier subscription model. Both tiers share the same core ingestion pipeline and authentication system.
+VISIOLOG operates on a two-tier subscription model. Both tiers share the same core ingestion pipeline and authentication system.
 
 | Aspect                          | Tier 1 — Records Vault ($8/mo)           | Tier 2 — Intelligence Engine ($23/mo)          |
 |---------------------------------|---------------------------------------|--------------------------------------------------|
@@ -198,7 +202,7 @@ An embedded AI assistant (Gemini with function calling + MCP tools) integrated i
 - Supports **tagging**: users apply tags to record sets, date ranges, or uploaded files. Tags are referenced in chat using `@tagname` (e.g., `@patrol-june`, `@q2-inspections`, `@uploaded-inventory`).
 - Generates contextually appropriate charts, tables, and visualizations on demand.
 - Communicates through a dedicated chat panel within the analytics page.
-- Operates within an isolated, encrypted session with a unique session ID managed by BarchScan.
+- Operates within an isolated, encrypted session with a unique session ID managed by VISIOLOG.
 - Uses embedded MCP tools to sort, filter, group, and render structured data directly within the chat thread.
 
 #### 3.3.2 External Data Upload
@@ -239,7 +243,7 @@ The AI assistant has embedded tool capabilities that allow it to operate on data
 
 ### 3.4 Session Management & Isolation
 
-Every user session is managed by BarchScan:
+Every user session is managed by VISIOLOG:
 
 - A unique session ID is generated per user per analytics session.
 - Session state (AI context, active data sources, conversation history) is encrypted.
@@ -253,7 +257,7 @@ Every user session is managed by BarchScan:
 
 ### 4.1 Architectural Style
 
-BarchScan uses a **serverless client-server architecture** with a **two-tier SaaS model**:
+VISIOLOG uses a **serverless client-server architecture** with a **two-tier SaaS model**:
 
 - **Frontend**: Static HTML/CSS/JS served from Vercel's CDN. No build step, no framework (evolving to React/Next.js for analytics).
 - **Backend**: Vercel Serverless Functions (Node.js, ESM) acting as stateless API handlers.
@@ -366,12 +370,12 @@ BarchScan uses a **serverless client-server architecture** with a **two-tier Saa
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  BarchScan Intelligence Engine                    [Session: #a3f9...]│
+│  VISIOLOG Intelligence Engine                    [Session: #a3f9...]│
 ├──────────────────────────────┬──────────────────────────────────────┤
 │   MANUAL ANALYTICS PANEL     │      AI ASSISTANT CHAT PANEL         │
 │                              │                                      │
 │  Data Sources:               │  ┌────────────────────────────────┐  │
-│  ● Scanned Records ▼         │  │ BarchScan AI                   │  │
+│  ● Scanned Records ▼         │  │ VISIOLOG AI                   │  │
 │  ● Uploaded Files ▼          │  │                                │  │
 │  ● @tagged-datasets ▼        │  │ Connected to: patrol-records,  │  │
 │                              │  │ @q2-inspections, uploaded.csv  │  │
@@ -907,7 +911,7 @@ API routes additionally:
 
 ### 10.1 Platform
 
-BarchScan is deployed on **Vercel** with Supabase as the database/auth backend:
+VISIOLOG is deployed on **Vercel** with Supabase as the database/auth backend:
 
 ```
 Repository (GitHub)
@@ -1031,8 +1035,8 @@ Repository (GitHub)
 
 | Term                    | Definition                                                                                        |
 |-------------------------|---------------------------------------------------------------------------------------------------|
-| **BarchScan**           | Intelligent Records Platform. A portmanteau suggesting "barcode/archive scanning."                |
-| **Record**              | Any physical structured document digitized via BarchScan.                                         |
+| **VISIOLOG**           | Intelligent Records Platform. A portmanteau suggesting "barcode/archive scanning."                |
+| **Record**              | Any physical structured document digitized via VISIOLOG.                                         |
 | **Records Vault**       | Tier 1 product — the encrypted storage and retrieval system for digitized records.                |
 | **Intelligence Engine** | Tier 2 product — analytics, AI assistant, and data analysis layer.                               |
 | **Ingestion**           | The process of uploading an image and AI-extracting structured data from it.                      |
@@ -1047,8 +1051,103 @@ Repository (GitHub)
 | **Day Marker**          | A colored border on table rows in the records vault that visually separates records by date.      |
 | **Formula Bar**         | An input field in the records vault (similar to Excel) for editing the currently selected cell.   |
 | **Supabase**            | The cloud database, auth, and storage platform replacing JSONBin in v2.0.                         |
-| **Stripe**              | The payment platform managing BarchScan's subscription billing and tier enforcement.              |
+| **Stripe**              | The payment platform managing VISIOLOG's subscription billing and tier enforcement.              |
 
 ---
 
-*End of Document — BarchScan SDD v2.0*
+## 14. UI/UX System Specifications
+
+### 14.1 Navigation Topology
+The architectural flow of the VISIOLOG platform relies on a heavily streamlined navigation model that ensures context isolation.
+*   **Public Interfaces**: The Landing/Marketing layout directs unconditionally to Authentication or Pricing.
+*   **Workspace Shell**: Acts as the authenticated container, exposing persistent peripheral navigation (sidebar/topbar). It houses the Dashboard, Document Library, Tables (Spreadsheet Editor), Capture Portal, and robust utility modules like Reports, Search, and settings domains.
+*   **Contextual Modalities**:
+    *   *Document Detail* triggers a split-view linkage with its respective *Spreadsheet Row*.
+    *   The *Capture Portal* follows a linear progression: Upload → Camera → Preview → Processing → Results.
+    *   Administrative modules break down cleanly into User Management, Role Mapping, and Security Policy enforcement.
+
+### 14.2 Core Interaction Pathways
+The system is anchored by several principal operational journeys designed to maximize throughput and minimize user friction:
+1.  **First-Time Invocation**: A seamless sequence from sign-in to workspace instantiation, concluding when the initial document is ingested and translated into an editable table format.
+2.  **High-Velocity Capture**: The Capture Portal is aggressively pared down to merely uploading or scanning, affixing optional taxonomy (titles/comments), and submitting to the processing queue.
+3.  **Data Verification**: Within the Document Library, users engage a split-pane inspector. Edits made to extracted fields immediately synchronize with the underlying tabular representation, with every mutation captured by an immutable audit trail.
+4.  **Spreadsheet Operations**: Comprehensive grid interactions (filtering, sorting, bulk mutation, and temporal undo/redo) function seamlessly while preserving perfect parity with the canonical document origin.
+
+### 14.3 Component and Thematic Inventory
+*   **Layout & Prototyping**: The system utilizes application shells, split panes, resizable dividers, and contextual inspector panels.
+*   **Data Representation**: Employs spreadsheets, localized grids, status indicators, and timeline-based log outputs.
+*   **Document Tooling**: Integrated viewers feature advanced telemetry such as zoom controls, rotational manipulation, and spatial annotation overlays.
+*   **Design Thematics**: The token registry is rigorous. It defines explicit scales for typography (`font-family-sans`, `font-family-mono`, extending from `size-xs` to `size-3xl`), spacing increments (from 4px up to 64px), standardized elevation shadows, and explicit z-index strata.
+
+### 14.4 System State & Edge Case Handling
+Resiliency in the user interface is paramount.
+*   **Degraded Connectivity**: Offline scenarios trigger persistent banners, queue local mutations, and expose manual retry handlers.
+*   **Concurrency Conflicts**: When discrepancies arise between the local state and server-side truth, the platform transparently exposes the origin of conflict (including author metadata) to force manual reconciliation.
+*   **Partial Extractions**: Ambiguous or incomplete OCR data is explicitly demarcated; the system never masks extraction uncertainty.
+
+---
+
+## 15. Frontend Architecture Details
+
+### 15.1 Structural Organization
+The repository adopts a strict feature-based isolation paradigm.
+```text
+src/
+  app/ (Global layouts, route definitions, top-level providers)
+  features/ (Isolated domains: auth, workspace, capture, spreadsheet, etc.)
+  components/ (Agnostic UI elements: layouts, feedback, data-display)
+  services/ (API clients, telemetry, offline synchronizers)
+  hooks/ (Shared React lifecycle abstractions)
+  lib/ (Static utilities, typed contracts)
+```
+
+### 15.2 State Management Taxonomy
+*   **Authentication & Permissions**: Owned by the auth feature; synchronized between server sessions and minimal local caches.
+*   **Remote Entities**: Managed by robust caching layers (e.g., TanStack Query) to handle refetching and invalidation.
+*   **Grid Mutations**: The spreadsheet feature maintains a localized mutation store that feeds into an asynchronous synchronization layer.
+*   **Upload Buffers**: The capture feature leverages IndexedDB combined with an in-memory queue to maintain pending uploads during offline or degraded network conditions.
+
+### 15.3 API Contract Layer
+All ingress and egress data operations flow through a strictly typed API client. This client acts as the singular HTTP gateway, normalizing network transport errors and backend exceptions into domain-specific, strongly typed application errors. It also inherently supports request cancellation to prevent race conditions during rapid route transitions.
+
+---
+
+## 16. Concrete Integration Specifications
+
+### 16.1 Tabular Grid Engine Integration
+The system integrates an external grid library (Univer) via a strictly bounded wrapper mechanism.
+*   **Isolation Policy**: Direct communication between UI components and the Univer engine is strictly prohibited.
+*   **Event Orchestration**: A dedicated `spreadsheet-engine` adapter translates local UI state into engine directives, and normalizes engine emissions (cell edits, range pastes, history states) back into application state.
+*   **Mutation Strategy**: The adapter writes to a localized edit buffer first, subsequently attempting a server commit, minimizing perceived latency.
+
+### 16.2 Ingestion Pipeline
+The document upload architecture is a highly tolerant, multi-stage pipeline:
+1.  **Ingress**: Captures payloads from batch pickers or direct camera feeds.
+2.  **Sanitization & Compression**: Validates dimensional and size constraints before applying lossless compression algorithms.
+3.  **Deduplication**: Employs cryptographic hashing and metadata heuristics to reject redundant submissions.
+4.  **Local Staging & Upload**: Stores pending artifacts in IndexedDB, delegating the physical transfer to a resilient, retry-capable background worker.
+
+### 16.3 Library Virtualization
+To accommodate enterprise-scale datasets, the Document Library implements aggressive windowed virtualization. The list exclusively renders items within the active viewport. To optimize image loading, progressive thumbnails are fetched immediately, while full-resolution assets are deferred until specifically invoked by the split-view inspector.
+
+---
+
+## 17. Engineering-Ready System Outputs
+
+### 17.1 Quality Assurance Matrices
+*   **Unit & Component Layers**: Granular testing of reducers, validation schemas, data transformers, and isolated UI components (split views, dialogs).
+*   **Integration & E2E Layers**: Validating the upload queue, the spreadsheet adapter contract, and holistic workflows extending from authentication to extraction review and permission enforcement.
+*   **Accessibility Constraints**: Strict adherence to WCAG AA baselines. This mandates native semantic HTML elements, explicit ARIA labeling, logical keyboard focus traps for dialogs, and appropriate announcements for asynchronous operations.
+
+### 17.2 Error Taxonomy
+The application categorizes faults into actionable, typed domains:
+*   `AuthError` / `PermissionError`: Triggers automated re-authentication flows or explicit access-denied visualizations.
+*   `NetworkError` / `TimeoutError`: Preserves active user input, surfaces offline indicators, and queues the payload for subsequent retry.
+*   `ConflictError`: Suspends automatic commits and initiates a data reconciliation wizard.
+
+### 17.3 Scalability Roadmap
+The application's deployment footprint is optimized for static CDN delivery (supplemented by server-side rendering for critical shells). Future extensibility is inherently supported through a plugin registry tailored for the spreadsheet engine and extraction modules, ensuring that new analytics models or custom validation logic can be injected without structural refactoring.
+
+---
+
+*End of Document — VISIOLOG SDD v2.0*

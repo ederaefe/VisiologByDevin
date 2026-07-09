@@ -1,9 +1,9 @@
-# BarchScan — Business Plan
+# VISIOLOG — Business Plan
 
 | Field              | Value                                           |
 |--------------------|------------------------------------------------|
 | **Document Type**  | Business Plan / Go-to-Market Strategy           |
-| **Product**        | BarchScan — Intelligent Records Platform        |
+| **Product**        | VISIOLOG — Intelligent Records Platform        |
 | **Version**        | 2.0                                             |
 | **Date**           | June 2026                                       |
 | **Status**         | Active                                          |
@@ -32,9 +32,9 @@
 
 ## 1. Executive Summary
 
-**BarchScan** is a web-based SaaS platform — an **Intelligent Records Platform** — that transforms physical structured records of any kind into searchable, analyzable, encrypted digital data. Users photograph any paper record; an AI vision model extracts the tabular data; users review and edit the suggestion; and the confirmed data is encrypted and stored securely in the cloud.
+**VISIOLOG** is a web-based SaaS platform — an **Intelligent Records Platform** — that transforms physical structured records of any kind into searchable, analyzable, encrypted digital data. Users photograph any paper record; an AI vision model extracts the tabular data; users review and edit the suggestion; and the confirmed data is encrypted and stored securely in the cloud.
 
-BarchScan is broader than a logbook tool. It serves any organization that generates paper-based structured records — patrol sheets, inspection forms, attendance registers, inventory counts, compliance sheets, shift logs, lab notebooks, and more.
+VISIOLOG is broader than a logbook tool. It serves any organization that generates paper-based structured records — patrol sheets, inspection forms, attendance registers, inventory counts, compliance sheets, shift logs, lab notebooks, and more.
 
 The platform operates on a **two-tier subscription model**:
 
@@ -43,7 +43,7 @@ The platform operates on a **two-tier subscription model**:
 | **Tier 1** | Records Vault | **$8/month** | Scan, digitize, encrypt, store, search, and export any physical records |
 | **Tier 2** | Intelligence Engine | **$23/month** | Everything in Tier 1 + AI analytics assistant, manual analytics tools, external data upload, MCP-embedded tools, and deep data insights |
 
-BarchScan targets organizations that still depend on paper records — maritime operators, security firms, healthcare facilities, education institutions, manufacturing plants, agricultural operations, and government agencies — providing a path from paper to intelligence without manual data entry overhead.
+VISIOLOG targets organizations that still depend on paper records — maritime operators, security firms, healthcare facilities, education institutions, manufacturing plants, agricultural operations, and government agencies — providing a path from paper to intelligence without manual data entry overhead.
 
 ---
 
@@ -71,13 +71,13 @@ Millions of organizations worldwide maintain physical records for operations, in
 
 ### 2.3 The Opportunity
 
-No affordable, intelligent, mobile-first platform currently transforms paper records into encrypted, analyzable data and connects users to an AI that can reason over that data. BarchScan fills this gap entirely.
+No affordable, intelligent, mobile-first platform currently transforms paper records into encrypted, analyzable data and connects users to an AI that can reason over that data. VISIOLOG fills this gap entirely.
 
 ---
 
 ## 3. Solution
 
-BarchScan delivers a seamless pipeline from physical record to digital intelligence:
+VISIOLOG delivers a seamless pipeline from physical record to digital intelligence:
 
 ```
 ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
@@ -96,7 +96,7 @@ BarchScan delivers a seamless pipeline from physical record to digital intellige
 **Key differentiators:**
 
 1. **AI-guided, human-confirmed** — Not blind OCR. Users review the AI suggestion and control what gets saved.
-2. **Beyond logbooks** — BarchScan handles any structured physical record from any sector.
+2. **Beyond logbooks** — VISIOLOG handles any structured physical record from any sector.
 3. **Encrypted by default** — AES-256 encryption at rest, TLS in transit. Data privacy is non-negotiable.
 4. **Connected intelligence** — Tier 2 AI assistant has access to all user records AND uploaded external data simultaneously, with tagging and chat referencing.
 5. **External data upload** — Tier 2 users bring their own CSV/Excel/JSON files into the analytics engine alongside scanned records.
@@ -243,7 +243,7 @@ ARR = MRR × 12
 
 | Competitor | Price | AI Extraction | Human Review Step | Encrypted Storage | Analytics | External Data Upload | Mobile-First |
 |---|---|---|---|---|---|---|---|
-| **BarchScan** | $8–$23/mo | Yes AI Vision | Yes Full editor | Yes AES-256 | Yes AI + Manual | Yes CSV/Excel/JSON | Yes |
+| **VISIOLOG** | $8–$23/mo | Yes AI Vision | Yes Full editor | Yes AES-256 | Yes AI + Manual | Yes CSV/Excel/JSON | Yes |
 | Google Lens | Free | Partial OCR | No | No | No | No | Yes |
 | Adobe Scan | $10–$25/mo | OCR only | No | No | No | No | Yes |
 | Microsoft Lens | Free | Basic table | Limited | No | No | No | Yes |
@@ -251,9 +251,9 @@ ARR = MRR × 12
 | ABBYY FineReader | $200+/mo | Yes | Limited | Yes | No | No | No |
 | Kofax | $500+/mo | Yes | Yes | Yes | Limited | No | No |
 
-### 7.2 BarchScan's Moat
+### 7.2 VISIOLOG's Moat
 
-1. **Price** — At $8/month, BarchScan is 5–60× cheaper than the only paid alternatives with comparable extraction quality.
+1. **Price** — At $8/month, VISIOLOG is 5–60× cheaper than the only paid alternatives with comparable extraction quality.
 2. **Human-in-the-loop** — No other consumer/SMB tool has an AI suggestion + user edit + confirm workflow.
 3. **"Records" positioning** — Not locked to logbooks. Serves any sector with structured paper records.
 4. **Connected analytics** — Tier 2 connects scanned records AND uploaded external data to a single AI assistant. No competitor does this.
@@ -398,7 +398,7 @@ ARR = MRR × 12
 
 | Commitment | Details |
 |------------|---------|
-| **User data ownership** | Users own 100% of their data. BarchScan is a processor, not an owner. |
+| **User data ownership** | Users own 100% of their data. VISIOLOG is a processor, not an owner. |
 | **No data selling** | User data is never sold, shared, or used for advertising. |
 | **Right to export** | Users can export all data at any time (CSV, JSON). |
 | **Right to delete** | Users can permanently delete all records and close their account. |
@@ -542,4 +542,4 @@ The Tier 2 analytics engine is the primary long-term investment. Goal: **world-c
 
 ---
 
-*End of Document — BarchScan Business Plan v2.0*
+*End of Document — VISIOLOG Business Plan v2.0*

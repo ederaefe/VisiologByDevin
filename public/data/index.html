@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BarchScan · Data Ledger</title>
+    <title>VISIOLOG · Data Ledger</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
 
@@ -1682,7 +1682,7 @@
 
     <!-- ===== INSTALL BANNER ===== -->
     <div id="install-banner">
-        <p><strong>Install BarchScan</strong> — Save this app to your home screen for quick access.</p>
+        <p><strong>Install VISIOLOG</strong> — Save this app to your home screen for quick access.</p>
         <div class="ib-actions">
             <button class="ib-primary" id="ib-install">Install</button>
             <button id="ib-close">✕</button>
@@ -1945,7 +1945,7 @@ Click 'Run' to execute."></textarea>
                         </svg>
                     </div>
                     <div>
-                        <h1>BarchScan</h1>
+                        <h1>VISIOLOG</h1>
                         <div class="subtitle">Data Ledger · Structured output</div>
                     </div>
                 </div>
@@ -2187,7 +2187,7 @@ Click 'Run' to execute."></textarea>
         // ============================================================
         (function() {
             const banner = document.getElementById('install-banner');
-            const key = 'barchscan_install_banner_dismissed';
+            const key = 'visiolog_install_banner_dismissed';
             if (!localStorage.getItem(key)) {
                 banner.classList.add('visible');
             }
@@ -2610,20 +2610,20 @@ Click 'Run' to execute."></textarea>
         // ============================================================
         // INIT
         // ============================================================
-        const SESSION_KEY = 'barchscan_authenticated';
+        const SESSION_KEY = 'visiolog_authenticated';
         const rootElement = document.documentElement;
 
-        if (localStorage.getItem('barchscan_theme') === 'light') {
+        if (localStorage.getItem('visiolog_theme') === 'light') {
             rootElement.setAttribute('data-theme', 'light');
         }
 
         function setTheme(theme) {
             if (theme === 'light') {
                 rootElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('barchscan_theme', 'light');
+                localStorage.setItem('visiolog_theme', 'light');
             } else {
                 rootElement.removeAttribute('data-theme');
-                localStorage.setItem('barchscan_theme', 'dark');
+                localStorage.setItem('visiolog_theme', 'dark');
             }
             document.getElementById('theme-overlay').classList.remove('open');
             showToast(`Theme changed to ${theme}`, 'success');
@@ -2773,17 +2773,17 @@ Click 'Run' to execute."></textarea>
             }
         }
 
-        const SHEETS_KEY = 'barchscan_sheets';
-        const ACTIVE_SHEET_KEY = 'barchscan_active_sheet';
+        const SHEETS_KEY = 'visiolog_sheets';
+        const ACTIVE_SHEET_KEY = 'visiolog_active_sheet';
         let activeSheetName = '';
 
         function getSheetNames() { return JSON.parse(localStorage.getItem(SHEETS_KEY) || '[]'); }
 
         function saveSheetNames(names) { localStorage.setItem(SHEETS_KEY, JSON.stringify(names)); }
 
-        function getSheetData(name) { return JSON.parse(localStorage.getItem(`barchscan_sheet_${name}`) || '[]'); }
+        function getSheetData(name) { return JSON.parse(localStorage.getItem(`visiolog_sheet_${name}`) || '[]'); }
 
-        function saveSheetData(name, data) { localStorage.setItem(`barchscan_sheet_${name}`, JSON.stringify(data)); }
+        function saveSheetData(name, data) { localStorage.setItem(`visiolog_sheet_${name}`, JSON.stringify(data)); }
 
         function setActiveSheet(name) {
             activeSheetName = name;
@@ -2850,7 +2850,7 @@ Click 'Run' to execute."></textarea>
         function deleteSheet(name) {
             const names = getSheetNames().filter(n => n !== name);
             saveSheetNames(names);
-            localStorage.removeItem(`barchscan_sheet_${name}`);
+            localStorage.removeItem(`visiolog_sheet_${name}`);
             if (activeSheetName === name) {
                 if (names.length > 0) switchSheet(names[0]);
                 else {
@@ -2923,10 +2923,10 @@ Click 'Run' to execute."></textarea>
                     return `"${val.replace(/"/g, '""')}"`;
                 }).join(',')).join('\n');
                 const csvContent = `${headers}\n${rows}`;
-                downloadBlob(csvContent, 'barchscan_export.csv', 'text/csv');
+                downloadBlob(csvContent, 'visiolog_export.csv', 'text/csv');
             } else {
                 const jsonContent = JSON.stringify(logbookData, null, 2);
-                downloadBlob(jsonContent, 'barchscan_export.json', 'application/json');
+                downloadBlob(jsonContent, 'visiolog_export.json', 'application/json');
             }
             document.getElementById('export-overlay').classList.remove('open');
         });
@@ -3886,7 +3886,7 @@ Click 'Run' to execute."></textarea>
             navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
 
-        console.log('BarchScan loaded with glass design.');
+        console.log('VISIOLOG loaded with glass design.');
         console.log('Keyboard shortcuts: 1=Save, 2=Edit, 3=Undo, 4=Redo, 5=Find, 6=Filter, 7=Sort↑, 8=Sort↓, 9=Freeze, 0=Wrap');
         console.log('Edit → Save morphs; Cancel discards changes.');
 

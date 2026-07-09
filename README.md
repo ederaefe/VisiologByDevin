@@ -1,10 +1,10 @@
-# BarchScan
+# VISIOLOG
 
-BarchScan is a modern SaaS platform designed to digitize physical structured documents (logbooks, sheets, registers) into secure, encrypted, and analyzable digital formats.
+VISIOLOG is a modern SaaS platform designed to digitize physical structured documents (logbooks, sheets, registers) into secure, encrypted, and analyzable digital formats.
 
 ## 1. Core Platform Overview
 
-BarchScan combines mobile-optimized capture interfaces with Google Gemini 2.5 Flash vision AI to extract structured tables from page photographs. The system follows a human-in-the-loop workflow:
+VISIOLOG combines mobile-optimized capture interfaces with Google Gemini 2.5 Flash vision AI to extract structured tables from page photographs. The system follows a human-in-the-loop workflow:
 1. **Scan**: Users upload or take a photograph of any physical record page.
 2. **Suggest**: The AI model analyzes the image and suggests a structured table.
 3. **Edit**: Users review and refine the suggested table (insert, rename, delete rows/columns; edit cell values).
@@ -14,7 +14,7 @@ BarchScan combines mobile-optimized capture interfaces with Google Gemini 2.5 Fl
 
 ## 2. Product Tiers & SaaS Model
 
-BarchScan is structured as a two-tier subscription service:
+VISIOLOG is structured as a two-tier subscription service:
 
 ### Tier 1: Records Vault ($8/month)
 * **Goal**: Seamless retrieval, digitizing, and long-term secure archiving.
@@ -41,7 +41,7 @@ BarchScan is structured as a two-tier subscription service:
 
 ## 3. Project Architecture
 
-BarchScan is built with a decentralized, component-based frontend and serverless API handlers on Vercel:
+VISIOLOG is built with a decentralized, component-based frontend and serverless API handlers on Vercel:
 
 ```
                   ┌──────────────────────────────────────────────┐
