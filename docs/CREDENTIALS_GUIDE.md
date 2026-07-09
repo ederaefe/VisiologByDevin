@@ -59,34 +59,34 @@ This document provides a highly detailed, step-by-step walkthrough for generatin
 
 ---
 
-## 3. Cloudinary Credentials (Image Asset Hosting)
+## 3. Supabase Storage Bucket Setup (Image Hosting)
 
-**Purpose**: Efficiently stores and optimizes the raw photographs uploaded by users.
+**Purpose**: Stores the raw scans and photos uploaded via the ingestion interface.
 
 ### Step-by-Step Directions:
 
-1. **Navigate to Cloudinary**: Go to <https://cloudinary.com/> and Sign Up / Log In.
-2. **Access the Dashboard**: Once logged in, you should land on the "Programmable Media" Dashboard. If not, click the "Dashboard" icon on the left sidebar.
-3. **Locate Account Details**:
-   - Look near the top of the main dashboard area for a section titled **"Account Details"** or **"Product Environment Credentials"**.
-4. **Copy the Credentials**: You need three specific values from this card:
-   - **Cloud Name**: A short string (e.g., `dzzyxabc`). Click the copy icon next to it. This is your `CLOUDINARY_CLOUD_NAME`.
-   - **API Key**: A 15-digit number (e.g., `123456789012345`). Click copy. This is your `CLOUDINARY_API_KEY`.
-   - **API Secret**: A string of random characters. It will be hidden by asterisks (`**********`). Click the **👁️ (Eye icon)** to reveal it, then copy it. This is your `CLOUDINARY_API_SECRET`.
+1. **Open the Storage Dashboard**:
+   - Go to your Supabase project dashboard.
+   - On the far-left dark sidebar, click the basket icon labeled **"Storage"**.
+2. **Create the Bucket**:
+   - Click the **"New Bucket"** button (typically at the top of the storage sub-panel).
+   - **Bucket Name**: Type exactly `logbooks` (all lowercase, no spaces).
+   - **Public Bucket**: Toggle this option **ON** (green). This allows the front-end interface and the Gemini processing pipelines to retrieve the image files via public URLs.
+   - Click **"Save"** or **"Create bucket"**.
+3. **Verify Bucket Creation**:
+   - You should now see the `logbooks` bucket listed in your storage panel. The upload and delete pipelines will now work automatically!
 
 ---
 
-## Finalizing the Deployment
+## Finalizing the Environment Settings
 
-Once you have gathered all 6 values, your `.env` file should look like this:
+Once you have gathered your values, your local `.env` and Vercel environment variables should look like this:
 
 ```env
-VITE_GEMINI_API_KEY=AIzaSyA_example_key_123456789
-VITE_SUPABASE_URL=https://abcdefghijklm.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR...
-CLOUDINARY_CLOUD_NAME=yourcloudname
-CLOUDINARY_API_KEY=123456789012345
-CLOUDINARY_API_SECRET=AbCdEfGhIjKlMnOpQrStUvWxYz
+VITE_GEMINI_API_KEY=AQ.Ab8RN6I1tLCzDMLE6E8Ta26SgIgy64LagBcNa44uZhfiwd9MrQ
+VITE_SUPABASE_URL=https://zniqpkpehbbeuocvabwv.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc...
+PASSCODE=9980
 ```
 
 You are now fully prepared to deploy VISIOLOG.

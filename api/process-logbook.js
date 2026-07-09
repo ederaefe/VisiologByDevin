@@ -1,5 +1,6 @@
 import { IncomingForm } from 'formidable';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 
 export const config = {
@@ -149,6 +150,34 @@ EXTRACTION RULES:
 
         if (!Array.isArray(structuredData)) {
             structuredData = [structuredData];
+        }
+
+        // Upload image to Supabase Storage before unlinking
+        if (process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY) {
+            try {
+                const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
+                
+                // Create bucket if not exists
+                await supabase.storage.createBucket('logbooks', { public: true }).catch(() => {});
+                
+                const fileExt = uploadedFile.originalFilename ? uploadedFile.originalFilename.split('.').pop() : 'jpg';
+                const filename = `visiolog_${Date.now()}.${fileExt}`;
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('logbooks')
+                    .upload(filename, imageBuffer, {
+                        contentType: mimeType,
+                        duplex: 'half'
+                    });
+                
+                if (uploadError) {
+                    console.error("Supabase Storage upload error:", uploadError);
+                } else {
+                    console.log("Uploaded image to Supabase Storage:", filename);
+                }
+            } catch (err) {
+                console.error("Supabase upload exception:", err);
+            }
         }
 
         try {

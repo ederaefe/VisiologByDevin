@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   if (!public_id || !imageUrl) return res.status(400).json({ error: 'Missing public_id or imageUrl' });
 
   try {
-    // Fetch the image from Cloudinary URL
+    // Fetch the image from Supabase Storage URL
     const imageResponse = await fetch(imageUrl);
     const buffer = await imageResponse.arrayBuffer();
     const formData = new FormData();

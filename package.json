@@ -8,9 +8,11 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.0",
+    "@supabase/supabase-js": "^2.110.2",
     "formidable": "^3.5.1"
   },
   "devDependencies": {
-    "md-to-pdf": "^5.2.5"
+    "md-to-pdf": "^5.2.5",
+    "supabase": "^2.109.1"
   }
 }

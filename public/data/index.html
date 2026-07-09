@@ -3936,7 +3936,7 @@ Click 'Run' to execute."></textarea>
             container.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 0.5rem;">Loading...</div>';
 
             try {
-                const res = await fetch('/api/cloudinary-images');
+                const res = await fetch('/api/supabase-images');
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
                 const images = data.images || [];
