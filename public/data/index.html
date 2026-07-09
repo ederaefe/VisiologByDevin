@@ -6,6 +6,9 @@
     <title>VISIOLOG · Data Ledger</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- ===== PEER DEPENDENCIES FOR UNIVERJS ===== -->
     <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
@@ -52,7 +55,7 @@
             --border-subtle: rgba(255, 255, 255, 0.06);
 
             /* ---- Typography ---- */
-            --font: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            --font: 'Outfit', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
             --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
 
             /* ---- Spacing ---- */
@@ -2636,6 +2639,11 @@ Click 'Run' to execute."></textarea>
             }
             document.getElementById('theme-overlay').classList.remove('open');
             showToast(`Theme changed to ${theme}`, 'success');
+
+            // Re-render the UniverJS grid to apply theme changes dynamically!
+            if (typeof logbookData !== 'undefined' && logbookData.length) {
+                buildDynamicTable(logbookData);
+            }
         }
 
         document.getElementById('theme-light').addEventListener('click', () => setTheme('light'));
@@ -3109,9 +3117,9 @@ Click 'Run' to execute."></textarea>
                 }
             }, true);
 
-            // Initialize Univer
             const { createUniver, LocaleType, mergeLocales } = UniverPresets;
             const { UniverSheetsCorePreset, UniverPresetSheetsCoreEnUS } = UniverSheetsCore;
+            const isDarkTheme = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') !== 'light';
 
             const univer = createUniver({
                 locale: LocaleType.EN_US,
@@ -3120,6 +3128,7 @@ Click 'Run' to execute."></textarea>
                         UniverPresetSheetsCoreEnUS
                     ),
                 },
+                darkMode: isDarkTheme
             });
 
             univer.registerPreset(UniverSheetsCorePreset);
