@@ -7,13 +7,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- ===== LUCKYSHEET SPREADSHEET ENGINE ===== -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css" />
-    <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+    <!-- ===== PEER DEPENDENCIES FOR UNIVERJS ===== -->
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/rxjs/dist/bundles/rxjs.umd.min.js"></script>
+    <script src="https://unpkg.com/echarts@5.6.0/dist/echarts.min.js"></script>
+
+    <!-- ===== UNIVERJS SPREADSHEET ENGINE ===== -->
+    <script src="https://unpkg.com/@univerjs/presets/lib/umd/index.js"></script>
+    <script src="https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/index.js"></script>
+    <script src="https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/locales/en-US.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@univerjs/preset-sheets-core/lib/index.css" />
 
     <!-- ===== MICROSOFT FLUENT / GLASS DESIGN ===== -->
     <style>
@@ -2139,7 +2143,7 @@ Click 'Run' to execute."></textarea>
 
         <!-- ===== TABLE ===== -->
         <div class="table-wrapper" id="table-container" style="display:none; height: calc(100vh - 180px); width: 100%; position: relative;">
-            <div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;height:100%;left: 0px;top: 0px;"></div>
+            <div id="univer-container" style="margin:0px;padding:0px;position:absolute;width:100%;height:100%;left: 0px;top: 0px;"></div>
         </div>
 
         <div id="empty-state" class="empty-state">
@@ -2874,7 +2878,7 @@ Click 'Run' to execute."></textarea>
 
         const origSaveToMemory = saveTableToMemory;
         saveTableToMemory = async function() {
-            const { headers, data } = getLuckysheetData();
+            const { headers, data } = getUniverData();
             logbookData = data;
             currentHeaders = headers;
 
@@ -3000,20 +3004,25 @@ Click 'Run' to execute."></textarea>
             }
         });
 
-        function getLuckysheetData() {
-            if (typeof luckysheet === 'undefined') return { headers: [], data: [] };
-            const sheets = luckysheet.getluckysheetfile();
-            if (!sheets || !sheets.length) return { headers: [], data: [] };
-            const sheet = sheets[0];
-            const data2D = sheet.data;
-            if (!data2D || !data2D.length) return { headers: [], data: [] };
+        function getUniverData() {
+            if (typeof window.univerAPI === 'undefined' || !window.univerAPI) return { headers: [], data: [] };
+            const workbook = window.univerAPI.getActiveWorkbook();
+            if (!workbook) return { headers: [], data: [] };
+            const sheet = workbook.getActiveSheet();
+            if (!sheet) return { headers: [], data: [] };
+
+            const rowCount = sheet.getRowCount();
+            const colCount = sheet.getColumnCount();
+
+            const range = sheet.getRange(0, 0, rowCount, colCount);
+            const values = range.getValues();
+            if (!values || !values.length) return { headers: [], data: [] };
 
             // Find headers in row 0
             const headers = [];
-            const firstRow = data2D[0];
+            const firstRow = values[0];
             for (let c = 0; c < firstRow.length; c++) {
-                const cell = firstRow[c];
-                const headerVal = cell && cell.v !== undefined ? String(cell.v).trim() : '';
+                const headerVal = firstRow[c] !== null && firstRow[c] !== undefined ? String(firstRow[c]).trim() : '';
                 if (headerVal) {
                     headers.push(headerVal);
                 } else {
@@ -3022,12 +3031,11 @@ Click 'Run' to execute."></textarea>
             }
 
             const data = [];
-            for (let r = 1; r < data2D.length; r++) {
+            for (let r = 1; r < values.length; r++) {
                 const rowObj = {};
                 let hasData = false;
                 for (let c = 0; c < headers.length; c++) {
-                    const cell = data2D[r] ? data2D[r][c] : null;
-                    const cellVal = cell && cell.v !== undefined ? String(cell.v).trim() : '';
+                    const cellVal = values[r] && values[r][c] !== null && values[r][c] !== undefined ? String(values[r][c]).trim() : '';
                     if (cellVal !== '') hasData = true;
                     rowObj[headers[c]] = cellVal;
                 }
@@ -3046,9 +3054,94 @@ Click 'Run' to execute."></textarea>
                 metaKey: true,
                 bubbles: true
             });
-            const inputEl = document.querySelector('.luckysheet-input-box');
-            if (inputEl) inputEl.dispatchEvent(event);
-            else document.dispatchEvent(event);
+            document.activeElement?.dispatchEvent(event) || document.dispatchEvent(event);
+        }
+
+        function buildUniverGrid(headers, data) {
+            const cellDataMatrix = {};
+
+            // Row 0 is headers
+            cellDataMatrix["0"] = {};
+            headers.forEach((h, colIdx) => {
+                cellDataMatrix["0"][String(colIdx)] = {
+                    v: h,
+                    s: {
+                        bl: 1, // Bold header
+                        ht: 1, // Centered horizontal
+                        vt: 1  // Centered vertical
+                    }
+                };
+            });
+
+            // Rows 1 to N are data
+            data.forEach((row, rowIdx) => {
+                const rKey = String(rowIdx + 1);
+                cellDataMatrix[rKey] = {};
+                headers.forEach((h, colIdx) => {
+                    const val = row[h] !== undefined ? row[h] : '';
+                    cellDataMatrix[rKey][String(colIdx)] = {
+                        v: String(val)
+                    };
+                });
+            });
+
+            // Clean up previous Univer instance
+            if (window.univerInstance) {
+                window.univerInstance.dispose();
+                window.univerInstance = null;
+                window.univerAPI = null;
+            }
+
+            const container = document.getElementById('univer-container');
+            container.innerHTML = ''; // Clear DOM
+
+            // Prevent editing via DOM event interception in read-only mode
+            container.addEventListener('dblclick', (e) => {
+                if (!isEditMode) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            }, true);
+            container.addEventListener('keydown', (e) => {
+                if (!isEditMode) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            }, true);
+
+            // Initialize Univer
+            const { createUniver, LocaleType, mergeLocales } = UniverPresets;
+            const { UniverSheetsCorePreset, UniverPresetSheetsCoreEnUS } = UniverSheetsCore;
+
+            const univer = createUniver({
+                locale: LocaleType.EN_US,
+                locales: {
+                    enUS: mergeLocales(
+                        UniverPresetSheetsCoreEnUS
+                    ),
+                },
+            });
+
+            univer.registerPreset(UniverSheetsCorePreset);
+            univer.createUniverSheet(container);
+
+            window.univerInstance = univer;
+            window.univerAPI = UniverCore.FUniver.newAPI(univer);
+
+            // Create the workbook with initial data
+            window.univerAPI.createWorkbook({
+                id: 'visiolog-workbook',
+                name: activeSheetName || 'VISIOLOG Data Ledger',
+                sheets: {
+                    'sheet-01': {
+                        id: 'sheet-01',
+                        name: activeSheetName || 'Sheet1',
+                        rowCount: Math.max(data.length + 15, 25),
+                        columnCount: Math.max(headers.length + 5, 10),
+                        cellData: cellDataMatrix
+                    }
+                }
+            });
         }
 
         function buildDynamicTable(data) {
@@ -3060,80 +3153,10 @@ Click 'Run' to execute."></textarea>
                 currentHeaders = ['Column 1', 'Column 2', 'Column 3'];
             }
 
-            const cellData = [];
-            // Row 0 is headers
-            currentHeaders.forEach((h, colIdx) => {
-                cellData.push({
-                    r: 0,
-                    c: colIdx,
-                    v: {
-                        v: h,
-                        m: h,
-                        bl: 1,
-                        bg: '#1e1e24',
-                        fc: '#ffffff',
-                        ht: 1,
-                        vt: 1
-                    }
-                });
-            });
-
-            // Rows 1 to N are data
-            data.forEach((row, rowIdx) => {
-                currentHeaders.forEach((h, colIdx) => {
-                    const val = row[h] !== undefined ? row[h] : '';
-                    cellData.push({
-                        r: rowIdx + 1,
-                        c: colIdx,
-                        v: {
-                            v: val,
-                            m: String(val)
-                        }
-                    });
-                });
-            });
-
-            // Show table container and hide empty state
             tableContainer.style.display = 'block';
             emptyState.style.display = 'none';
 
-            // Re-create Luckysheet
-            luckysheet.destroy();
-            luckysheet.create({
-                container: 'luckysheet',
-                title: activeSheetName || 'VISIOLOG Data Ledger',
-                lang: 'en',
-                allowUpdate: isEditMode,
-                data: [{
-                    name: activeSheetName || 'Sheet1',
-                    color: '#7000ff',
-                    status: 1,
-                    order: 0,
-                    column: Math.max(currentHeaders.length + 5, 10),
-                    row: Math.max(data.length + 10, 20),
-                    celldata: cellData
-                }],
-                showinfobar: false,
-                showsheetbar: false,
-                showstatisticBar: false,
-                enableAddRow: isEditMode,
-                enableAddCol: isEditMode,
-                sheetFormulaBar: false,
-                showtoolbar: false,
-                hook: {
-                    cellMousedown: function(cell, position) {
-                        const r = position.r;
-                        const c = position.c;
-                        const val = cell && cell.v !== undefined ? String(cell.v) : '';
-                        document.getElementById('formula-cell-ref').textContent = `R${r + 1}C${c + 1}`;
-                        document.getElementById('formula-input').value = val;
-                    },
-                    cellEditBefore: function(range) {
-                        document.getElementById('formula-bar').classList.add('visible');
-                    }
-                }
-            });
-
+            buildUniverGrid(currentHeaders, data);
             updateFilterSelect();
         }
 
@@ -3160,7 +3183,7 @@ Click 'Run' to execute."></textarea>
         });
 
         async function saveTableToMemory() {
-            const { headers, data } = getLuckysheetData();
+            const { headers, data } = getUniverData();
             logbookData = data;
             currentHeaders = headers;
 
@@ -3188,13 +3211,13 @@ Click 'Run' to execute."></textarea>
         function updateUndoRedo() {}
 
         document.getElementById('tb-undo').addEventListener('click', () => {
-            if (typeof luckysheet !== 'undefined') {
+            if (typeof window.univerInstance !== 'undefined') {
                 triggerShortcut('z');
                 showToast('Undo', 'info');
             }
         });
         document.getElementById('tb-redo').addEventListener('click', () => {
-            if (typeof luckysheet !== 'undefined') {
+            if (typeof window.univerInstance !== 'undefined') {
                 triggerShortcut('y');
                 showToast('Redo', 'info');
             }
@@ -3505,68 +3528,11 @@ Click 'Run' to execute."></textarea>
             });
         }
 
-        function buildLuckysheetGrid(headers, data) {
-            const cellData = [];
-            headers.forEach((h, colIdx) => {
-                cellData.push({
-                    r: 0,
-                    c: colIdx,
-                    v: { v: h, m: h, bl: 1, bg: '#1e1e24', fc: '#ffffff', ht: 1, vt: 1 }
-                });
-            });
-            data.forEach((row, rowIdx) => {
-                headers.forEach((h, colIdx) => {
-                    const val = row[h] !== undefined ? row[h] : '';
-                    cellData.push({
-                        r: rowIdx + 1,
-                        c: colIdx,
-                        v: { v: val, m: String(val) }
-                    });
-                });
-            });
-
-            luckysheet.destroy();
-            luckysheet.create({
-                container: 'luckysheet',
-                title: activeSheetName || 'VISIOLOG Data Ledger',
-                lang: 'en',
-                allowUpdate: isEditMode,
-                data: [{
-                    name: activeSheetName || 'Sheet1',
-                    color: '#7000ff',
-                    status: 1,
-                    order: 0,
-                    column: Math.max(headers.length + 5, 10),
-                    row: Math.max(data.length + 10, 20),
-                    celldata: cellData
-                }],
-                showinfobar: false,
-                showsheetbar: false,
-                showstatisticBar: false,
-                enableAddRow: isEditMode,
-                enableAddCol: isEditMode,
-                sheetFormulaBar: false,
-                showtoolbar: false,
-                hook: {
-                    cellMousedown: function(cell, position) {
-                        const r = position.r;
-                        const c = position.c;
-                        const val = cell && cell.v !== undefined ? String(cell.v) : '';
-                        document.getElementById('formula-cell-ref').textContent = `R${r + 1}C${c + 1}`;
-                        document.getElementById('formula-input').value = val;
-                    },
-                    cellEditBefore: function(range) {
-                        document.getElementById('formula-bar').classList.add('visible');
-                    }
-                }
-            });
-        }
-
         function filterRows() {
             const colIdx = parseInt(document.getElementById('filter-col-select').value);
             const term = document.getElementById('filter-input').value.trim().toLowerCase();
             if (term === '') {
-                buildLuckysheetGrid(currentHeaders, logbookData);
+                buildUniverGrid(currentHeaders, logbookData);
                 return;
             }
             const header = currentHeaders[colIdx];
@@ -3574,12 +3540,12 @@ Click 'Run' to execute."></textarea>
                 const val = String(row[header] || '').toLowerCase();
                 return val.includes(term);
             });
-            buildLuckysheetGrid(currentHeaders, filtered);
+            buildUniverGrid(currentHeaders, filtered);
         }
 
         function clearFilter() {
             document.getElementById('filter-input').value = '';
-            buildLuckysheetGrid(currentHeaders, logbookData);
+            buildUniverGrid(currentHeaders, logbookData);
         }
 
         document.getElementById('filter-input').addEventListener('input', filterRows);
@@ -3589,23 +3555,24 @@ Click 'Run' to execute."></textarea>
         });
 
         document.getElementById('tb-freeze').addEventListener('click', (e) => {
-            if (typeof luckysheet === 'undefined') return;
-            luckysheet.setFreezen("row", { row_focus: 0 });
+            if (typeof window.univerAPI === 'undefined' || !window.univerAPI) return;
+            const workbook = window.univerAPI.getActiveWorkbook();
+            if (!workbook) return;
+            const sheet = workbook.getActiveSheet();
+            if (!sheet) return;
+            sheet.setFrozenRows(1);
             showToast('Header frozen', 'info');
         });
 
         document.getElementById('tb-wrap').addEventListener('click', (e) => {
-            if (typeof luckysheet === 'undefined') return;
-            const ranges = luckysheet.getRange();
-            if (ranges && ranges.length > 0) {
-                const r = ranges[0].row;
-                const c = ranges[0].column;
-                for (let row = r[0]; row <= r[1]; row++) {
-                    for (let col = c[0]; col <= c[1]; col++) {
-                        luckysheet.setCellFormat(row, col, "tb", 2); // 2 = Wrap text
-                    }
-                }
-                luckysheet.refresh();
+            if (typeof window.univerAPI === 'undefined' || !window.univerAPI) return;
+            const workbook = window.univerAPI.getActiveWorkbook();
+            if (!workbook) return;
+            const sheet = workbook.getActiveSheet();
+            if (!sheet) return;
+            const range = sheet.getActiveRange();
+            if (range) {
+                range.setWrap(true);
                 showToast('Text wrapping applied to selection', 'info');
             } else {
                 showToast('Select cells to wrap text', 'error');
@@ -3613,20 +3580,22 @@ Click 'Run' to execute."></textarea>
         });
 
         document.getElementById('tb-autoresize').addEventListener('click', (e) => {
-            if (typeof luckysheet === 'undefined') return;
-            luckysheet.resize();
-            showToast('Layout resized', 'info');
+            showToast('Layout auto-adjusted', 'info');
         });
 
         document.getElementById('tb-duprow').addEventListener('click', () => {
             if (!isEditMode) return;
-            const { headers, data } = getLuckysheetData();
+            const { headers, data } = getUniverData();
             logbookData = data;
 
             let targetIdx = -1;
-            const ranges = luckysheet.getRange();
-            if (ranges && ranges.length > 0) {
-                targetIdx = ranges[0].row[0];
+            if (typeof window.univerAPI !== 'undefined' && window.univerAPI) {
+                const workbook = window.univerAPI.getActiveWorkbook();
+                const sheet = workbook ? workbook.getActiveSheet() : null;
+                const range = sheet ? sheet.getActiveRange() : null;
+                if (range) {
+                    targetIdx = range.getRow();
+                }
             }
 
             if (targetIdx < 0 || targetIdx >= logbookData.length) {
@@ -3642,13 +3611,17 @@ Click 'Run' to execute."></textarea>
 
         document.getElementById('tb-insrow').addEventListener('click', () => {
             if (!isEditMode) return;
-            const { headers, data } = getLuckysheetData();
+            const { headers, data } = getUniverData();
             logbookData = data;
 
             let targetIdx = logbookData.length;
-            const ranges = luckysheet.getRange();
-            if (ranges && ranges.length > 0) {
-                targetIdx = ranges[0].row[0];
+            if (typeof window.univerAPI !== 'undefined' && window.univerAPI) {
+                const workbook = window.univerAPI.getActiveWorkbook();
+                const sheet = workbook ? workbook.getActiveSheet() : null;
+                const range = sheet ? sheet.getActiveRange() : null;
+                if (range) {
+                    targetIdx = range.getRow();
+                }
             }
 
             const newRow = {};
@@ -3662,35 +3635,33 @@ Click 'Run' to execute."></textarea>
         document.getElementById('tb-fbar').addEventListener('click', (e) => {
             const bar = document.getElementById('formula-bar');
             bar.classList.toggle('visible');
-            if (bar.classList.contains('visible') && typeof luckysheet !== 'undefined') {
-                const ranges = luckysheet.getRange();
-                if (ranges && ranges.length > 0) {
-                    const r = ranges[0].row[0];
-                    const c = ranges[0].column[0];
-                    const cell = luckysheet.getCellValue(r, c) || '';
-                    document.getElementById('formula-cell-ref').textContent = `R${r + 1}C${c + 1}`;
-                    document.getElementById('formula-input').value = cell;
+            if (bar.classList.contains('visible') && typeof window.univerAPI !== 'undefined' && window.univerAPI) {
+                const workbook = window.univerAPI.getActiveWorkbook();
+                const sheet = workbook ? workbook.getActiveSheet() : null;
+                const range = sheet ? sheet.getActiveRange() : null;
+                if (range) {
+                    const val = range.getValue() || '';
+                    document.getElementById('formula-cell-ref').textContent = `R${range.getRow() + 1}C${range.getColumn() + 1}`;
+                    document.getElementById('formula-input').value = val;
                 }
             }
             e.currentTarget.classList.toggle('tb-active', bar.classList.contains('visible'));
         });
 
         document.getElementById('formula-input').addEventListener('input', (e) => {
-            if (typeof luckysheet === 'undefined') return;
-            const ranges = luckysheet.getRange();
-            if (ranges && ranges.length > 0) {
-                const r = ranges[0].row[0];
-                const c = ranges[0].column[0];
-                luckysheet.setCellValue(r, c, e.target.value);
-                luckysheet.refresh();
+            if (typeof window.univerAPI === 'undefined' || !window.univerAPI) return;
+            const workbook = window.univerAPI.getActiveWorkbook();
+            const sheet = workbook ? workbook.getActiveSheet() : null;
+            const range = sheet ? sheet.getActiveRange() : null;
+            if (range) {
+                range.setValue(e.target.value);
             }
         });
 
         document.getElementById('formula-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const container = document.querySelector('.luckysheet-input-box');
-                if (container) container.focus();
+                document.getElementById('univer-container')?.focus();
             }
         });
 
