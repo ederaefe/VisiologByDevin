@@ -8,7 +8,7 @@ All traces of the former "BarchScan" moniker have been permanently eradicated fr
 
 *   **Public Assets & HTML**: Extensively updated `public/index.html`, `public/404.html`, `public/data/index.html`, and `product-page/index.html` to establish the new identity in meta tags, install banners, and core headers.
 *   **React Marketing Shell**: Restructured `product-page/src/App.jsx` to leverage the VISIOLOG identity with its glassmorphism design ethos.
-*   **Core Configs & API**: Unified local storage keys (e.g., `visiolog_authenticated`, `visiolog_sheets`) in the data interface, updated Cloudinary upload prefixes, and synchronized all `package.json` names and `manifest.js` configurations.
+*   **Core Configs & API**: Unified local storage keys (e.g., `visiolog_authenticated`, `visiolog_sheets`) in the data interface, updated Supabase Storage paths, and synchronized all `package.json` names and `manifest.js` configurations.
 
 ## 2. Document Generation Stabilization
 
@@ -48,13 +48,13 @@ We completely excised the legacy custom HTML/DOM-based table editor from `public
 
 We successfully decommissioned Cloudinary hosting and migrated all photograph storage assets to **Supabase Storage**:
 *   **CLI & Client SDK Packages**: Installed `supabase` CLI and runtime `@supabase/supabase-js` client in the workspace.
-*   **Automatic Bucket Initialization**: Retrofitted the file processing endpoint `api/process-logbook.js` to dynamically create the public bucket `logbooks` if it is not present.
+*   **Automatic Bucket Initialization**: Retrofitted the scan processing endpoint `api/process-scan.js` to dynamically create the public bucket `logbooks` if it is not present.
 *   **File Streaming**: Scanned records are uploaded directly to the Supabase Storage bucket with unique, timestamped names before local temp disk cleanup.
-*   **Unified Storage Listing API**: Replaced `api/cloudinary-images.js` with `api/supabase-images.js` to query the bucket files directory directly and map them into the same data schema (`{ images: [...] }`).
+*   **Unified Storage Listing API**: The gallery uses `api/get-scans.js` to query the ingestion queue and map stored files into the data schema (`{ scans: [...] }`).
 *   **Singular Deletion & Reprocessing Endpoint Alignments**:
-    *   Wired `api/delete-image.js` to remove files from the storage bucket.
-    *   Created `api/reprocess-image.js` (fixing a singular/plural routing bug) to re-parse the image from the bucket's public URL.
-    *   Pointed the front-end list panel in `public/data/index.html` to pull from `/api/supabase-images`.
+    *   Wired `api/delete-scan.js` to remove files from the storage bucket.
+    *   Reprocessing uses `api/process-scan.js` to re-parse images from the bucket's public URL.
+    *   Pointed the front-end list panel in `public/data/index.html` to pull from `/api/get-scans`.
 
 ## 7. Supabase Database Migration & Asynchronous Ingestion Queue
 
@@ -78,7 +78,7 @@ We migrated from JSONBin to Supabase PostgreSQL and implemented an asynchronous 
 
 > [!IMPORTANT]
 > **Remaining Work**:
-> - Update `public/upload/index.html` to use `/api/upload-scan` instead of `/api/process-logbook`
+> - Update `public/upload/index.html` to use the asynchronous `/api/upload-scan` flow
 > - Implement Ingestion Gallery UI in `public/data/index.html` (multi-tab sidebar, image cards with status badges, split-pane viewer)
 > - Add client-triggered polling queue engine to auto-process pending scans
 > - Run `supabase_schema.sql` in Supabase Dashboard before deployment

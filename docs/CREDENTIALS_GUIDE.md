@@ -83,9 +83,9 @@ This document provides a highly detailed, step-by-step walkthrough for generatin
 Once you have gathered your values, your local `.env` and Vercel environment variables should look like this:
 
 ```env
-VITE_GEMINI_API_KEY=AQ.Ab8RN6I1tLCzDMLE6E8Ta26SgIgy64LagBcNa44uZhfiwd9MrQ
-VITE_SUPABASE_URL=https://zniqpkpehbbeuocvabwv.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc...
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 PASSCODE=9980
 ```
 

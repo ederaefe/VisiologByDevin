@@ -131,9 +131,9 @@ VISIOLOG combines a mobile-optimized capture interface with Google's Gemini 2.5 
 │   ┌────────────────────────────────────────────────────────────┐    │
 │   │                     API Layer (/api/)                       │    │
 │   │                                                             │    │
-│   │  process-logbook    get-logbook     update-logbook          │    │
+│   │  process-scan      get-logbook     update-logbook          │    │
 │   │  validate-passcode  clear-database  upload-data             │    │
-│   │  cloudinary-images  delete-image    reprocess-images        │    │
+│   │  get-scans         delete-scan     process-scan             │    │
 │   │  analyze-data       generate-report  chat-analytics         │    │
 │   └───────┬──────────────────┬────────────────────┬────────────┘    │
 │           │                  │                    │                  │
@@ -518,9 +518,9 @@ POST /api/commit-record
 | `analytics-chat`     | `api/analytics-chat.js`       | *(Tier 2)* Streams Gemini response with function calling. Resolves @tag references, calls MCP tools, returns AI response + rendered data. |
 | `manage-session`     | `api/manage-session.js`       | *(Tier 2)* Create, retrieve, save, or terminate an analytics session. Returns session ID. |
 | `validate-session`   | `api/validate-session.js`     | Verifies Supabase JWT and checks user's active tier (Tier 1 or Tier 2) against Stripe. |
-| `cloudinary-images`  | `api/cloudinary-images.js`    | Lists up to 50 resources from user's Cloudinary folder. Returns metadata.            |
-| `delete-image`       | `api/delete-image.js`         | Deletes a Cloudinary resource by `public_id`.                                        |
-| `reprocess-images`   | `api/reprocess-images.js`     | Fetches image from Cloudinary, sends to `process-record` for re-extraction.          |
+| `get-scans`          | `api/get-scans.js`            | Lists ingestion scans and their Supabase Storage URLs.                               |
+| `delete-scan`        | `api/delete-scan.js`          | Deletes a scan and its associated Storage file.                                      |
+| `process-scan`       | `api/process-scan.js`         | Processes a stored scan through Gemini and updates Supabase records.                 |
 | `stripe-webhook`     | `api/stripe-webhook.js`       | Handles Stripe billing events: subscription created, upgraded, cancelled, payment failed. Updates user tier in Supabase. |
 
 ---
@@ -596,9 +596,9 @@ GET /api/get-records + JWT → Supabase (RLS) → decrypt → JSON array
         ├── [Filter / Sort] → client-side
         ├── [Export] → CSV / JSON download
         ├── [Tag records] → (Tier 2) → stored in Supabase as tag metadata
-        ├── [Image Gallery] → GET /api/cloudinary-images
-        │       ├── [Delete Image] → DELETE /api/delete-image
-        │       └── [Reprocess] → POST /api/reprocess-images → process-record
+        ├── [Image Gallery] → GET /api/get-scans
+        │       ├── [Delete Image] → DELETE /api/delete-scan
+        │       └── [Reprocess] → POST /api/process-scan
         └── [Clear Vault] → DELETE /api/clear-vault → Supabase reset
 ```
 
@@ -724,9 +724,9 @@ Data sources loaded:
 | Endpoint                  | Method | Summary                                               |
 |---------------------------|--------|-------------------------------------------------------|
 | `/api/clear-vault`        | DELETE | Clears all records for authenticated user             |
-| `/api/cloudinary-images`  | GET    | Lists user's uploaded source images                   |
-| `/api/delete-image`       | DELETE | Deletes a Cloudinary image by `public_id`             |
-| `/api/reprocess-images`   | POST   | Re-runs AI extraction on a stored Cloudinary image    |
+| `/api/get-scans`          | GET    | Lists ingestion scans and their source images         |
+| `/api/delete-scan`        | DELETE | Deletes a scan and its associated Storage file       |
+| `/api/process-scan`       | POST   | Re-runs AI extraction on a stored scan                |
 | `/api/stripe-webhook`     | POST   | Handles Stripe billing lifecycle events               |
 
 ### 7.2 External Service Interfaces
@@ -901,7 +901,7 @@ API routes additionally:
 | Item                            | Status in v2.0                                                       | Severity |
 |---------------------------------|----------------------------------------------------------------------|----------|
 | Passcode auth replaced          | Replaced by Supabase Auth (JWT). Fully resolved.                     | Yes Fixed |
-| JSONBin master key in repo      | JSONBin replaced by Supabase. `create_bin.js` to be deleted.         | Yes Fixed |
+| JSONBin master key in repo      | JSONBin replaced by Supabase. Legacy setup utility removed.           | Yes Fixed |
 | Open CORS (`*`)                 | CORS restricted to known origins in production.                       | Yes Fixed |
 | No API auth middleware          | All API handlers now validate Supabase JWT.                           | Yes Fixed |
 
@@ -971,7 +971,7 @@ Repository (GitHub)
 | `CLOUDINARY_API_SECRET`     | Image management endpoints          | Cloudinary API secret                          |
 | `STRIPE_SECRET_KEY`         | `stripe-webhook`, `validate-session`| Stripe secret key                              |
 | `STRIPE_WEBHOOK_SECRET`     | `stripe-webhook`                    | Stripe webhook signing secret                  |
-| `VERCEL_URL`                | `reprocess-images`                  | Auto-set by Vercel; used for self-calls        |
+| `VERCEL_URL`                | `process-scan`                      | Auto-set by Vercel; used for self-calls        |
 
 ---
 
