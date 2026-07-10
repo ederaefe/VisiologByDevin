@@ -9,6 +9,30 @@ export const config = {
     },
 };
 
+function firstFieldValue(value) {
+    return Array.isArray(value) ? value[0] : value;
+}
+
+async function resolveTemplateId(supabase, requestedTemplate) {
+    const value = firstFieldValue(requestedTemplate);
+    if (value) {
+        const selector = /^[0-9a-f-]{36}$/i.test(value) ? 'id' : 'key';
+        const { data } = await supabase
+            .from('logbook_templates')
+            .select('id')
+            .eq(selector, value)
+            .maybeSingle();
+        if (data) return data.id;
+    }
+
+    const { data: defaultTemplate } = await supabase
+        .from('logbook_templates')
+        .select('id')
+        .eq('is_default', true)
+        .maybeSingle();
+    return defaultTemplate?.id || null;
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -39,6 +63,10 @@ export default async function handler(req, res) {
         const mimeType = uploadedFile.mimetype || 'image/jpeg';
 
         const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY);
+        const templateId = await resolveTemplateId(
+            supabase,
+            data.fields.template || data.fields.template_id
+        );
         
         // Ensure bucket exists
         await supabase.storage.createBucket('logbooks', { public: true }).catch(() => {});
@@ -65,7 +93,8 @@ export default async function handler(req, res) {
             .from('visiolog_scans')
             .insert({
                 filename: filename,
-                status: 'pending'
+                status: 'pending',
+                template_id: templateId
             })
             .select()
             .single();
