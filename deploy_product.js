@@ -43,6 +43,20 @@ try {
   fs.copyFileSync(distHtml, path.join(publicDir, 'index.html'));
   console.log('Deployed public/index.html');
 
+  // Emit the SPA shell at each client-side route so Vercel serves it via the
+  // filesystem (like /data and /review). A bare `vercel.json` rewrite to
+  // /index.html is not reliably applied for these paths, so a real file is
+  // shipped for every BrowserRouter route the app owns.
+  const spaRoutes = ['upload'];
+  for (const route of spaRoutes) {
+    const routeDir = path.join(publicDir, route);
+    if (!fs.existsSync(routeDir)) {
+      fs.mkdirSync(routeDir, { recursive: true });
+    }
+    fs.copyFileSync(distHtml, path.join(routeDir, 'index.html'));
+    console.log(`Deployed public/${route}/index.html`);
+  }
+
   // Copy assets folder if it exists
   if (fs.existsSync(distAssets)) {
     // Clear old public/assets if exists to avoid build accumulation
