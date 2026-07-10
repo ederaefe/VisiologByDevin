@@ -10,6 +10,10 @@
     {
       "source": "/data",
       "destination": "/data/index.html"
+    },
+    {
+      "source": "/review",
+      "destination": "/review/index.html"
     }
   ],
   "headers": [

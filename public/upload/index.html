@@ -226,8 +226,8 @@
         /* ----- FILE PREVIEW (thumbnail) ----- */
         #file-preview {
             display: none;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 8px;
             padding: 0.6rem 0.8rem;
             background: var(--hover-overlay);
             border: 1px solid var(--glass-border);
@@ -237,6 +237,32 @@
         }
         #file-preview.active {
             display: flex;
+        }
+
+        .template-picker {
+            display: block;
+            margin: 0 0 1rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        .template-picker select {
+            display: block;
+            width: 100%;
+            margin-top: 0.4rem;
+            padding: 0.7rem 0.8rem;
+            color: var(--text-primary);
+            background: var(--hover-overlay);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+        }
+        #batch-preview-list {
+            width: 100%;
+        }
+        .batch-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.25rem 0;
         }
 
         #file-preview .thumb {
@@ -880,6 +906,14 @@
 
         <!-- ===== UPLOAD VIEW ===== -->
         <div class="view active" id="upload-view">
+            <label class="template-picker" for="template-select">
+                Logbook type
+                <select id="template-select">
+                    <option value="security_gate">Security Gate / Visitor</option>
+                    <option value="classroom_attendance">Classroom Attendance</option>
+                    <option value="hospital_registry">Hospital Registry</option>
+                </select>
+            </label>
             <div class="drop-zone" id="drop-zone">
                 <p class="drop-zone-text">Select your input method</p>
                 <div class="action-buttons">
@@ -901,16 +935,12 @@
                     </button>
                 </div>
                 <input type="file" id="camera-input" accept="image/*" capture="environment">
-                <input type="file" id="file-input" accept="image/*">
+                <input type="file" id="file-input" accept="image/*" multiple>
             </div>
 
             <!-- File preview with thumbnail -->
             <div id="file-preview">
-                <img class="thumb" id="preview-thumb" alt="Preview" />
-                <div class="file-info">
-                    <strong id="filename">No document selected</strong>
-                    <span id="filesize"></span>
-                </div>
+                <div id="batch-preview-list"></div>
                 <span id="remove-file">✕</span>
             </div>
 
@@ -957,9 +987,10 @@
                     <polyline points="20 6 9 17 4 12" />
                 </svg>
             </div>
-            <div class="view-title">Transmission Complete</div>
-            <div class="view-subtitle">The record has been securely ingested.</div>
-            <button class="secondary-btn" id="reset-btn" style="width:100%;margin-top:0.5rem;">Submit Another Record</button>
+            <div class="view-title">Upload complete</div>
+            <div class="view-subtitle" id="success-message">Your pages were securely uploaded.</div>
+            <button class="secondary-btn" id="reset-btn" style="width:100%;margin-top:0.5rem;">Upload another</button>
+            <button class="secondary-btn" id="close-btn" style="width:100%;margin-top:0.5rem;">Close</button>
         </div>
     </div>
 
@@ -1122,17 +1153,18 @@
         const triggerCamera = document.getElementById('trigger-camera');
         const triggerUpload = document.getElementById('trigger-upload');
         const filePreview = document.getElementById('file-preview');
-        const previewThumb = document.getElementById('preview-thumb');
-        const filenameDisplay = document.getElementById('filename');
-        const filesizeDisplay = document.getElementById('filesize');
+        const batchPreviewList = document.getElementById('batch-preview-list');
         const removeFileBtn = document.getElementById('remove-file');
         const processBtn = document.getElementById('process-btn');
         const resetBtn = document.getElementById('reset-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const templateSelect = document.getElementById('template-select');
+        const successMessage = document.getElementById('success-message');
         const loadingCircle = document.getElementById('loading-circle');
         const loadingStatus = document.getElementById('loading-status');
 
         const CIRCUMFERENCE = 326.72;
-        let currentFile = null;
+        let currentFiles = [];
         let timerInterval = null;
         let pingInterval = null;
         let uploadAbort = false;
@@ -1148,36 +1180,50 @@
             return (bytes / 1048576).toFixed(1) + ' MB';
         }
 
-        function handleFile(file) {
-            if (!file || !file.type.startsWith('image/')) {
+        function renderBatchPreview() {
+            batchPreviewList.innerHTML = '';
+            currentFiles.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'batch-preview-item';
+                const thumb = document.createElement('img');
+                thumb.className = 'thumb';
+                thumb.alt = 'Preview';
+                const info = document.createElement('div');
+                info.className = 'file-info';
+                const name = document.createElement('strong');
+                name.textContent = file.name;
+                const size = document.createElement('span');
+                size.textContent = formatSize(file.size);
+                info.append(name, size);
+                item.append(thumb, info);
+                batchPreviewList.appendChild(item);
+                const reader = new FileReader();
+                reader.onload = event => { thumb.src = event.target.result; };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleFiles(files) {
+            const selected = Array.from(files || []).filter(file => file.type.startsWith('image/'));
+            if (!selected.length) {
                 showToast('Please select an image file.', 'error');
                 return;
             }
-            currentFile = file;
-            filenameDisplay.textContent = file.name;
-            filesizeDisplay.textContent = formatSize(file.size);
-
-            // Show thumbnail
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewThumb.src = e.target.result;
-                previewThumb.onerror = () => { previewThumb.style.display = 'none'; };
-            };
-            reader.readAsDataURL(file);
-
+            currentFiles = selected;
+            renderBatchPreview();
             dropZone.style.display = 'none';
             filePreview.classList.add('active');
             processBtn.disabled = false;
-            showToast('File ready for processing.', 'success');
+            showToast(`${currentFiles.length} page${currentFiles.length === 1 ? '' : 's'} ready for upload.`, 'success');
         }
 
         function resetUI() {
-            currentFile = null;
+            currentFiles = [];
             cameraInput.value = '';
             fileInput.value = '';
             dropZone.style.display = 'block';
             filePreview.classList.remove('active');
-            previewThumb.src = '';
+            batchPreviewList.innerHTML = '';
             processBtn.disabled = true;
 
             switchView('upload-view');
@@ -1198,14 +1244,18 @@
         triggerUpload.addEventListener('click', () => fileInput.click());
 
         cameraInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFile(e.target.files[0]);
+            if (e.target.files.length) handleFiles(e.target.files);
         });
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFile(e.target.files[0]);
+            if (e.target.files.length) handleFiles(e.target.files);
         });
 
         removeFileBtn.addEventListener('click', resetUI);
         resetBtn.addEventListener('click', resetUI);
+        closeBtn.addEventListener('click', () => {
+            window.close();
+            showToast('You can close this tab now.', 'info');
+        });
 
         // ================================================================
         // PINGING + TIMEOUT HANDLING
@@ -1226,7 +1276,7 @@
         // PROCESS BUTTON
         // ================================================================
         processBtn.addEventListener('click', async () => {
-            if (!currentFile) return;
+            if (!currentFiles.length) return;
 
             // Switch to loading
             switchView('loading-view');
@@ -1267,24 +1317,21 @@
             pingInterval = setInterval(pingServer, 3000);
 
             try {
-                // Compress image
-                const compressed = await compressImage(currentFile);
-                const formData = new FormData();
-                formData.append('file', compressed);
-
-                const response = await fetch('/api/upload-scan', {
-                    method: 'POST',
-                    body: formData,
-                    signal: AbortSignal.timeout(60000) // 1 min timeout
-                });
-
-                if (uploadAbort) return;
-
-                if (!response.ok) {
-                    throw new Error('Server error');
+                for (let index = 0; index < currentFiles.length; index += 1) {
+                    loadingStatus.textContent = `Uploading page ${index + 1} of ${currentFiles.length}…`;
+                    const compressed = await compressImage(currentFiles[index]);
+                    const formData = new FormData();
+                    formData.append('file', compressed);
+                    formData.append('template', templateSelect.value);
+                    const response = await fetch('/api/upload-scan', {
+                        method: 'POST',
+                        body: formData,
+                        signal: AbortSignal.timeout(60000)
+                    });
+                    if (uploadAbort) return;
+                    if (!response.ok) throw new Error('Server error');
+                    await response.json();
                 }
-
-                const result = await response.json();
 
                 clearInterval(timerInterval);
                 clearInterval(pingInterval);
@@ -1292,10 +1339,8 @@
 
                 setTimeout(() => {
                     switchView('success-view');
-                    showToast('Record enqueued successfully! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/data';
-                    }, 1200);
+                    successMessage.textContent = `${currentFiles.length} page${currentFiles.length === 1 ? '' : 's'} uploaded successfully.`;
+                    showToast('Upload complete.', 'success');
                 }, 400);
 
             } catch (err) {

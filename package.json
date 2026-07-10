@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node",
-    "build": "node deploy_product.js"
+    "build": "node deploy_product.js",
+    "test": "node tests/validation.test.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.0",
