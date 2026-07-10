@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Route, Routes } from 'react-router-dom';
+import Upload from './Upload';
 
 // --- Inline SVGs for Premium Icons (No Emojis) ---
 const CheckIcon = () => (
@@ -51,7 +53,7 @@ const ServerIcon = () => (
   </svg>
 );
 
-function App() {
+function LandingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
 
   // Pricing calculations
@@ -351,6 +353,15 @@ function App() {
         </div>
       </footer>
     </>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/upload" element={<Upload />} />
+    </Routes>
   );
 }
 

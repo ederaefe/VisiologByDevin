@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/upload",
-      "destination": "/upload/index.html"
+      "destination": "/index.html"
     },
     {
       "source": "/data",
