@@ -1272,10 +1272,10 @@
                 const formData = new FormData();
                 formData.append('file', compressed);
 
-                const response = await fetch('/api/process-logbook', {
+                const response = await fetch('/api/upload-scan', {
                     method: 'POST',
                     body: formData,
-                    signal: AbortSignal.timeout(120000) // 2 min timeout
+                    signal: AbortSignal.timeout(60000) // 1 min timeout
                 });
 
                 if (uploadAbort) return;
@@ -1292,7 +1292,10 @@
 
                 setTimeout(() => {
                     switchView('success-view');
-                    showToast('Record ingested successfully!', 'success');
+                    showToast('Record enqueued successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/data';
+                    }, 1200);
                 }, 400);
 
             } catch (err) {

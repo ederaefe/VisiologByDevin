@@ -1512,91 +1512,208 @@
             font-weight: 400;
         }
 
-        /* ===== CLOUDINARY PANEL (floating) ===== */
+        /* ===== INGESTION SIDE DRAWER ===== */
         #cloudinary-panel {
             display: none;
-            background: var(--glass-bg);
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 440px;
+            height: 100vh;
+            background: var(--bg-secondary);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            padding: 0.75rem 1rem;
-            margin-top: 2px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+            border-left: 1px solid var(--glass-border);
+            padding: 1.5rem 1.2rem;
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.40);
+            z-index: 999;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 1rem;
         }
         #cloudinary-panel.visible {
-            display: block;
-            animation: slideDown var(--duration-med) var(--ease-spring);
+            display: flex;
+            animation: slideInRight var(--duration-med) var(--ease-smooth);
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
         }
         .cloudinary-item {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 8px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            padding: 12px;
             background: var(--bg-surface);
-            border-radius: 6px;
             border: 1px solid var(--glass-border);
-            transition: background 0.2s;
+            border-radius: var(--radius-md);
+            transition: all var(--duration-fast) ease;
         }
         .cloudinary-item:hover {
-            background: var(--hover-overlay);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-muted);
         }
         .cloudinary-item img {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px solid var(--glass-border);
             flex-shrink: 0;
             cursor: pointer;
+            transition: transform var(--duration-fast) ease;
+        }
+        .cloudinary-item img:hover {
+            transform: scale(1.04);
         }
         .cloudinary-item .info {
             flex: 1;
             min-width: 0;
         }
         .cloudinary-item .info .name {
-            font-size: 0.7rem;
-            font-weight: 500;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .cloudinary-item .info .date {
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             color: var(--text-secondary);
+            margin-top: 2px;
         }
         .cloudinary-item .actions {
             display: flex;
-            gap: 4px;
+            gap: 6px;
         }
         .cloudinary-item .actions button {
-            background: transparent;
+            background: var(--bg-surface);
             border: 1px solid var(--glass-border);
             border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 0.6rem;
+            padding: 4px 10px;
+            font-size: 0.65rem;
+            font-weight: 500;
             cursor: pointer;
             color: var(--text-primary);
-            transition: all 0.15s;
-            white-space: nowrap;
+            transition: all var(--duration-fast) ease;
         }
         .cloudinary-item .actions button:hover {
-            background: var(--hover-overlay);
-            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--text-secondary);
         }
         .cloudinary-item .actions .reprocess-btn {
-            border-color: var(--info-color);
+            border-color: rgba(96, 165, 250, 0.3);
+            color: var(--info);
         }
         .cloudinary-item .actions .reprocess-btn:hover {
             background: rgba(96, 165, 250, 0.1);
-            border-color: var(--info-color);
+            border-color: var(--info);
         }
         .cloudinary-item .actions .delete-btn {
-            border-color: var(--error-color);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: var(--error);
         }
         .cloudinary-item .actions .delete-btn:hover {
-            background: rgba(255, 85, 85, 0.1);
-            border-color: var(--error-color);
+            background: rgba(255, 107, 107, 0.1);
+            border-color: var(--error);
+        }
+
+        /* ===== SCAN INSPECTOR OVERLAY & MODAL ===== */
+        #scan-inspector-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.60);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        #scan-inspector-overlay.open {
+            display: flex;
+        }
+        #scan-inspector-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            width: 92%;
+            max-width: 1040px;
+            height: 82vh;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            box-shadow: var(--glass-shadow);
+            animation: modalScale var(--duration-med) var(--ease-spring);
+        }
+        @keyframes modalScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .inspector-body {
+            display: flex;
+            flex: 1;
+            gap: 1.5rem;
+            min-height: 0;
+        }
+        .inspector-image-pane {
+            flex: 1;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            overflow: auto;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .inspector-image-pane img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        .inspector-data-pane {
+            flex: 1.2;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .inspector-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+        .inspector-table th, .inspector-table td {
+            border: 1px solid var(--glass-border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .inspector-table th {
+            background: var(--bg-surface);
+            font-weight: 600;
+        }
+        .inspector-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Pulsing indicator */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
 
         /* ===== DINO GAME (subtle) ===== */
@@ -2124,23 +2241,46 @@ Click 'Run' to execute."></textarea>
                 <button id="filter-clear-btn">✕ Clear</button>
             </div>
 
-            <!-- Cloudinary Panel (floating) -->
+            <!-- Ingestion Queue Panel (slide drawer) -->
             <div id="cloudinary-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <h3 style="font-size: 0.95rem; font-weight: 600;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">
-                            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom:1px solid var(--glass-border); padding-bottom: 0.75rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="9" y1="3" x2="9" y2="21"/>
                         </svg>
-                        Uploaded Images
+                        Ingestion Queue
                     </h3>
-                    <button id="cloudinary-close-btn" class="tb-btn" style="font-size:1.2rem;">✕</button>
+                    <button id="cloudinary-close-btn" class="tb-btn" style="font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
-                <div id="cloudinary-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 0.5rem;">
-                        No images loaded. Click Refresh.
+                <div id="cloudinary-list" style="display: flex; flex-direction: column; gap: 10px; flex:1; overflow-y:auto; padding-right:4px;">
+                    <div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 1.5rem;">
+                        No uploads found in the queue.
                     </div>
                 </div>
-                <button id="refresh-cloudinary" class="action-btn" style="margin-top: 0.5rem;">⟳ Refresh</button>
+                <button id="refresh-cloudinary" class="action-btn" style="margin-top: 1rem; width:100%; justify-content:center; padding: 8px;">⟳ Refresh Queue</button>
+            </div>
+
+            <!-- Ingestion Scan Inspector (overlay modal) -->
+            <div id="scan-inspector-overlay">
+                <div id="scan-inspector-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem;">
+                        <h2 style="font-size: 1.2rem; font-weight: 600; display:flex; align-items:center; gap:8px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;color:var(--success);"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                            Scan Inspector: <span id="inspector-title" style="color:var(--text-secondary); font-size: 1rem; font-weight:400;"></span>
+                        </h2>
+                        <button id="inspector-close-btn" class="action-btn" style="border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; padding:0; font-size: 1rem;">✕</button>
+                    </div>
+                    <div class="inspector-body">
+                        <div class="inspector-image-pane">
+                            <img id="inspector-img" src="" alt="Scan Source" />
+                        </div>
+                        <div class="inspector-data-pane">
+                            <h4 style="font-size:0.85rem; font-weight:600; margin-bottom: 0.5rem; color:var(--text-secondary);">Extracted Tabular Output</h4>
+                            <div id="inspector-data-body"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3929,132 +4069,300 @@ Click 'Run' to execute."></textarea>
         //   CLOUDINARY IMAGES – Moved to a toggleable panel
         // ============================================================
 
-        async function loadCloudinaryImages() {
+        // -------------------------------------------------------------
+        //   INGESTION QUEUE & GALLERY (SUPABASE STORAGE)
+        // -------------------------------------------------------------
+        let isPollingQueue = false;
+        let pollTimer = null;
+
+        async function loadIngestionScans() {
             const container = document.getElementById('cloudinary-list');
             if (!container) return;
 
-            container.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 0.5rem;">Loading...</div>';
-
             try {
-                const res = await fetch('/api/supabase-images');
-                if (!res.ok) throw new Error('Failed to fetch');
+                const res = await fetch('/api/get-scans');
+                if (!res.ok) throw new Error('Failed to fetch scans');
                 const data = await res.json();
-                const images = data.images || [];
+                const scans = data.scans || [];
 
-                if (images.length === 0) {
-                    container.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 0.5rem;">No images found.</div>';
+                if (scans.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 1.5rem;">No uploads found in the queue.</div>';
                     return;
                 }
 
                 container.innerHTML = '';
-                images.forEach(img => {
-                    const item = document.createElement('div');
-                    item.className = 'cloudinary-item';
+                let hasPendingJobs = false;
+
+                scans.forEach(scan => {
+                    if (scan.status === 'pending' || scan.status === 'processing') {
+                        hasPendingJobs = true;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'cloudinary-item';
+
+                    // Top Row: Image, Name, Status Badge
+                    const topRow = document.createElement('div');
+                    topRow.style.display = 'flex';
+                    topRow.style.alignItems = 'center';
+                    topRow.style.gap = '10px';
 
                     const thumb = document.createElement('img');
-                    thumb.src = img.url;
-                    thumb.alt = img.public_id;
+                    thumb.src = scan.url;
+                    thumb.alt = scan.filename;
                     thumb.loading = 'lazy';
-                    thumb.addEventListener('click', () => window.open(img.url, '_blank'));
+                    thumb.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openInspectorModal(scan);
+                    });
 
                     const info = document.createElement('div');
                     info.className = 'info';
                     const nameSpan = document.createElement('div');
                     nameSpan.className = 'name';
-                    nameSpan.textContent = img.public_id.split('/').pop() || img.public_id;
+                    nameSpan.textContent = scan.filename.split('/').pop() || scan.filename;
+                    
                     const dateSpan = document.createElement('div');
                     dateSpan.className = 'date';
-                    dateSpan.textContent = img.uploadedAt ? new Date(img.uploadedAt).toLocaleDateString() : '';
+                    dateSpan.textContent = new Date(scan.created_at).toLocaleString();
+                    
                     info.appendChild(nameSpan);
                     info.appendChild(dateSpan);
 
-                    const actions = document.createElement('div');
-                    actions.className = 'actions';
+                    // Status Badge
+                    const badge = document.createElement('span');
+                    badge.style.fontSize = '0.65rem';
+                    badge.style.padding = '3px 8px';
+                    badge.style.borderRadius = '10px';
+                    badge.style.fontWeight = '600';
+                    badge.style.textTransform = 'capitalize';
 
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.textContent = '⬇';
-                    downloadBtn.title = 'Download';
-                    downloadBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        window.open(img.url, '_blank');
-                    });
+                    if (scan.status === 'pending') {
+                        badge.style.background = 'rgba(250, 204, 21, 0.15)';
+                        badge.style.color = '#eab308';
+                        badge.textContent = 'pending';
+                        badge.style.animation = 'pulse 1.5s infinite';
+                    } else if (scan.status === 'processing') {
+                        badge.style.background = 'rgba(96, 165, 250, 0.15)';
+                        badge.style.color = '#60a5fa';
+                        badge.textContent = 'extracting';
+                    } else if (scan.status === 'completed') {
+                        badge.style.background = 'rgba(74, 222, 128, 0.15)';
+                        badge.style.color = '#4ade80';
+                        badge.textContent = 'completed';
+                    } else {
+                        badge.style.background = 'rgba(239, 68, 68, 0.15)';
+                        badge.style.color = '#f87171';
+                        badge.textContent = 'failed';
+                    }
+
+                    topRow.appendChild(thumb);
+                    topRow.appendChild(info);
+                    topRow.appendChild(badge);
+
+                    // Bottom Row: Actions (Inspector, Reprocess, Delete)
+                    const bottomRow = document.createElement('div');
+                    bottomRow.style.display = 'flex';
+                    bottomRow.style.justifyContent = 'flex-end';
+                    bottomRow.style.gap = '6px';
+                    bottomRow.style.marginTop = '4px';
+
+                    const inspectBtn = document.createElement('button');
+                    inspectBtn.textContent = '👁 Inspect';
+                    inspectBtn.style.padding = '3px 8px';
+                    inspectBtn.style.fontSize = '0.65rem';
+                    inspectBtn.style.background = 'var(--bg-surface)';
+                    inspectBtn.style.border = '1px solid var(--glass-border)';
+                    inspectBtn.style.borderRadius = '4px';
+                    inspectBtn.style.color = 'var(--text-primary)';
+                    inspectBtn.style.cursor = 'pointer';
+                    inspectBtn.addEventListener('click', () => openInspectorModal(scan));
+
+                    if (scan.status !== 'completed') {
+                        inspectBtn.disabled = true;
+                        inspectBtn.style.opacity = '0.4';
+                        inspectBtn.style.cursor = 'not-allowed';
+                    }
 
                     const reprocessBtn = document.createElement('button');
-                    reprocessBtn.textContent = '↻';
+                    reprocessBtn.textContent = '↻ Retry';
                     reprocessBtn.className = 'reprocess-btn';
-                    reprocessBtn.title = 'Reprocess';
+                    reprocessBtn.style.padding = '3px 8px';
+                    reprocessBtn.style.fontSize = '0.65rem';
                     reprocessBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
-                        reprocessBtn.disabled = true;
-                        reprocessBtn.textContent = '…';
-                        try {
-                            const res = await fetch('/api/reprocess-image', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ public_id: img.public_id, imageUrl: img.url })
-                            });
-                            const data = await res.json();
-                            if (res.ok) {
-                                showToast('Image reprocessed!', 'success');
-                            } else {
-                                showToast('Reprocess failed: ' + (data.error || 'unknown'), 'error');
-                            }
-                        } catch (err) {
-                            showToast('Error reprocessing.', 'error');
-                        } finally {
-                            reprocessBtn.disabled = false;
-                            reprocessBtn.textContent = '↻';
-                        }
+                        triggerScanReprocess(scan.id, reprocessBtn);
                     });
 
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = '✕';
+                    deleteBtn.textContent = '✕ Delete';
                     deleteBtn.className = 'delete-btn';
-                    deleteBtn.title = 'Delete';
+                    deleteBtn.style.padding = '3px 8px';
+                    deleteBtn.style.fontSize = '0.65rem';
                     deleteBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
-                        if (!confirm(`Delete "${img.public_id}" permanently?`)) return;
-                        deleteBtn.disabled = true;
-                        deleteBtn.textContent = '…';
-                        try {
-                            const res = await fetch('/api/delete-image', {
-                                method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ public_id: img.public_id })
-                            });
-                            if (res.ok) {
-                                showToast('Image deleted.', 'success');
-                                loadCloudinaryImages();
-                            } else {
-                                const data = await res.json();
-                                showToast('Delete failed: ' + (data.error || 'unknown'), 'error');
-                            }
-                        } catch (err) {
-                            showToast('Error deleting.', 'error');
-                        } finally {
-                            deleteBtn.disabled = false;
-                            deleteBtn.textContent = '✕';
-                        }
+                        if (!confirm('Delete this uploaded scan permanently?')) return;
+                        deleteScanJob(scan.id, scan.filename);
                     });
 
-                    actions.appendChild(downloadBtn);
-                    actions.appendChild(reprocessBtn);
-                    actions.appendChild(deleteBtn);
+                    bottomRow.appendChild(inspectBtn);
+                    bottomRow.appendChild(reprocessBtn);
+                    bottomRow.appendChild(deleteBtn);
 
-                    item.appendChild(thumb);
-                    item.appendChild(info);
-                    item.appendChild(actions);
-                    container.appendChild(item);
+                    card.appendChild(topRow);
+                    if (scan.error_message && scan.status === 'failed') {
+                        const errDiv = document.createElement('div');
+                        errDiv.style.fontSize = '0.6rem';
+                        errDiv.style.color = '#ef4444';
+                        errDiv.style.padding = '4px 6px';
+                        errDiv.style.background = 'rgba(239, 68, 68, 0.05)';
+                        errDiv.style.borderRadius = '4px';
+                        errDiv.style.wordBreak = 'break-word';
+                        errDiv.textContent = `Error: ${scan.error_message}`;
+                        card.appendChild(errDiv);
+                    }
+                    card.appendChild(bottomRow);
+                    container.appendChild(card);
                 });
 
+                // Start Client-Triggered Queue Engine
+                if (hasPendingJobs) {
+                    startQueueTrigger(scans);
+                } else {
+                    stopQueuePolling();
+                }
+
             } catch (err) {
-                console.error('Cloudinary load error:', err);
-                container.innerHTML = '<div style="color: var(--error-color); font-size: 0.75rem; text-align: center; padding: 0.5rem;">Failed to load images.</div>';
-                showToast('Could not load uploaded images.', 'error');
+                console.error('Scans list load error:', err);
+                container.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem; text-align: center; padding: 1.5rem;">Failed to fetch upload queue.</div>';
             }
         }
 
-        // ---- Cloudinary panel toggle ----
+        // Trigger reprocessing for a scan job
+        async function triggerScanReprocess(scanId, btnElement) {
+            if (btnElement) {
+                btnElement.disabled = true;
+                btnElement.textContent = '…';
+            }
+            try {
+                showToast('Image extraction restarted!', 'success');
+                const res = await fetch(`/api/process-scan?id=${scanId}`);
+                if (!res.ok) throw new Error('Reprocess request failed');
+                
+                // Refresh list and sheet data
+                loadIngestionScans();
+                loadLogbookData(); 
+            } catch (err) {
+                showToast('Could not reprocess image.', 'error');
+            } finally {
+                if (btnElement) {
+                    btnElement.disabled = false;
+                    btnElement.textContent = '↻ Retry';
+                }
+            }
+        }
+
+        // Delete a scan job and its associated file
+        async function deleteScanJob(scanId, filename) {
+            try {
+                // Delete file from Storage and DB via centralized endpoint
+                const storageRes = await fetch('/api/delete-scan', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: scanId, filename: filename })
+                });
+
+                if (!storageRes.ok) throw new Error('Deletion failed');
+
+                showToast('Scan and asset deleted.', 'success');
+                loadIngestionScans();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete scan.', 'error');
+            }
+        }
+
+        // Client-Triggered Background Queue Executor
+        async function startQueueTrigger(scans) {
+            if (isPollingQueue) return;
+            isPollingQueue = true;
+            console.log('Background queue engine started...');
+
+            // Loop through all pending scans and fire process requests
+            const pendingJobs = scans.filter(s => s.status === 'pending');
+            
+            // Execute in background non-blocking
+            pendingJobs.forEach(async (job) => {
+                try {
+                    console.log(`Processing scan job in background: ${job.id}`);
+                    const res = await fetch(`/api/process-scan?id=${job.id}`);
+                    if (res.ok) {
+                        showToast(`Extracted table data for job!`, 'success');
+                        loadLogbookData(); // Refresh spreadsheet automatically
+                    }
+                } catch (e) {
+                    console.error(`Background job failed for ${job.id}:`, e);
+                } finally {
+                    loadIngestionScans(); // Refresh list to update status badges
+                }
+            });
+
+            // Set polling timer to refresh badges every 5 seconds until clean
+            pollTimer = setInterval(loadIngestionScans, 5000);
+        }
+
+        function stopQueuePolling() {
+            if (isPollingQueue) {
+                isPollingQueue = false;
+                clearInterval(pollTimer);
+                console.log('Background queue engine idle.');
+            }
+        }
+
+        // Modal Inspector Functions
+        function openInspectorModal(scan) {
+            const overlay = document.getElementById('scan-inspector-overlay');
+            
+            // Set image
+            document.getElementById('inspector-img').src = scan.url;
+            document.getElementById('inspector-title').textContent = scan.filename.split('/').pop();
+
+            // Render mini-table
+            const dataPane = document.getElementById('inspector-data-body');
+            dataPane.innerHTML = '';
+
+            const data = scan.extracted_data || [];
+            if (data.length === 0) {
+                dataPane.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding: 2rem; font-size: 0.75rem;">No extracted table data found for this scan.</div>';
+            } else {
+                const headers = Object.keys(data[0]);
+                
+                // Create table head
+                let tableHtml = '<table class="inspector-table"><thead><tr>';
+                headers.forEach(h => tableHtml += `<th>${h}</th>`);
+                tableHtml += '</tr></thead><tbody>';
+
+                // Create table rows
+                data.forEach(row => {
+                    tableHtml += '<tr>';
+                    headers.forEach(h => {
+                        const val = row[h] !== null && row[h] !== undefined ? row[h] : '';
+                        tableHtml += `<td>${val}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+                dataPane.innerHTML = tableHtml;
+            }
+
+            overlay.classList.add('open');
+        }
+
+        document.getElementById('inspector-close-btn').addEventListener('click', () => {
+            document.getElementById('scan-inspector-overlay').classList.remove('open');
+        });
+
+        // ---- Ingestion panel toggle ----
         const cloudinaryPanel = document.getElementById('cloudinary-panel');
         const cloudinaryToggle = document.getElementById('cloudinary-toggle-btn');
         const cloudinaryClose = document.getElementById('cloudinary-close-btn');
@@ -4063,7 +4371,7 @@ Click 'Run' to execute."></textarea>
         function toggleCloudinaryPanel() {
             cloudinaryPanel.classList.toggle('visible');
             if (cloudinaryPanel.classList.contains('visible')) {
-                loadCloudinaryImages();
+                loadIngestionScans();
             }
         }
 
@@ -4076,7 +4384,7 @@ Click 'Run' to execute."></textarea>
             });
         }
         if (refreshCloudinary) {
-            refreshCloudinary.addEventListener('click', loadCloudinaryImages);
+            refreshCloudinary.addEventListener('click', loadIngestionScans);
         }
 
         // ============================================================
