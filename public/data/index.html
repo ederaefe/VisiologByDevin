@@ -1513,7 +1513,7 @@
         }
 
         /* ===== INGESTION SIDE DRAWER ===== */
-        #cloudinary-panel {
+        #gallery-panel {
             display: none;
             position: fixed;
             top: 0;
@@ -1531,7 +1531,7 @@
             flex-direction: column;
             gap: 1rem;
         }
-        #cloudinary-panel.visible {
+        #gallery-panel.visible {
             display: flex;
             animation: slideInRight var(--duration-med) var(--ease-smooth);
         }
@@ -1539,7 +1539,7 @@
             from { transform: translateX(100%); }
             to { transform: translateX(0); }
         }
-        .cloudinary-item {
+        .gallery-item {
             display: flex;
             flex-direction: column;
             align-items: stretch;
@@ -1550,11 +1550,11 @@
             border-radius: var(--radius-md);
             transition: all var(--duration-fast) ease;
         }
-        .cloudinary-item:hover {
+        .gallery-item:hover {
             background: rgba(255, 255, 255, 0.05);
             border-color: var(--text-muted);
         }
-        .cloudinary-item img {
+        .gallery-item img {
             width: 50px;
             height: 50px;
             object-fit: cover;
@@ -1564,14 +1564,14 @@
             cursor: pointer;
             transition: transform var(--duration-fast) ease;
         }
-        .cloudinary-item img:hover {
+        .gallery-item img:hover {
             transform: scale(1.04);
         }
-        .cloudinary-item .info {
+        .gallery-item .info {
             flex: 1;
             min-width: 0;
         }
-        .cloudinary-item .info .name {
+        .gallery-item .info .name {
             font-size: 0.75rem;
             font-weight: 600;
             color: var(--text-primary);
@@ -1579,16 +1579,16 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .cloudinary-item .info .date {
+        .gallery-item .info .date {
             font-size: 0.65rem;
             color: var(--text-secondary);
             margin-top: 2px;
         }
-        .cloudinary-item .actions {
+        .gallery-item .actions {
             display: flex;
             gap: 6px;
         }
-        .cloudinary-item .actions button {
+        .gallery-item .actions button {
             background: var(--bg-surface);
             border: 1px solid var(--glass-border);
             border-radius: 4px;
@@ -1599,23 +1599,23 @@
             color: var(--text-primary);
             transition: all var(--duration-fast) ease;
         }
-        .cloudinary-item .actions button:hover {
+        .gallery-item .actions button:hover {
             background: rgba(255, 255, 255, 0.08);
             border-color: var(--text-secondary);
         }
-        .cloudinary-item .actions .reprocess-btn {
+        .gallery-item .actions .reprocess-btn {
             border-color: rgba(96, 165, 250, 0.3);
             color: var(--info);
         }
-        .cloudinary-item .actions .reprocess-btn:hover {
+        .gallery-item .actions .reprocess-btn:hover {
             background: rgba(96, 165, 250, 0.1);
             border-color: var(--info);
         }
-        .cloudinary-item .actions .delete-btn {
+        .gallery-item .actions .delete-btn {
             border-color: rgba(255, 107, 107, 0.3);
             color: var(--error);
         }
-        .cloudinary-item .actions .delete-btn:hover {
+        .gallery-item .actions .delete-btn:hover {
             background: rgba(255, 107, 107, 0.1);
             border-color: var(--error);
         }
@@ -2088,7 +2088,7 @@ Click 'Run' to execute."></textarea>
                         </svg>
                         Macros
                     </button>
-                    <button class="action-btn" id="cloudinary-toggle-btn" title="Uploaded Images">
+                    <button class="action-btn" id="gallery-toggle-btn" title="Uploaded Images">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>
                         </svg>
@@ -2242,7 +2242,7 @@ Click 'Run' to execute."></textarea>
             </div>
 
             <!-- Ingestion Queue Panel (slide drawer) -->
-            <div id="cloudinary-panel">
+            <div id="gallery-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom:1px solid var(--glass-border); padding-bottom: 0.75rem;">
                     <h3 style="font-size: 1.1rem; font-weight: 600; display:flex; align-items:center; gap:8px;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
@@ -2251,14 +2251,14 @@ Click 'Run' to execute."></textarea>
                         </svg>
                         Ingestion Queue
                     </h3>
-                    <button id="cloudinary-close-btn" class="tb-btn" style="font-size:1.2rem; cursor:pointer;">✕</button>
+                    <button id="gallery-close-btn" class="tb-btn" style="font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
-                <div id="cloudinary-list" style="display: flex; flex-direction: column; gap: 10px; flex:1; overflow-y:auto; padding-right:4px;">
+                <div id="gallery-list" style="display: flex; flex-direction: column; gap: 10px; flex:1; overflow-y:auto; padding-right:4px;">
                     <div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; padding: 1.5rem;">
                         No uploads found in the queue.
                     </div>
                 </div>
-                <button id="refresh-cloudinary" class="action-btn" style="margin-top: 1rem; width:100%; justify-content:center; padding: 8px;">⟳ Refresh Queue</button>
+                <button id="refresh-gallery" class="action-btn" style="margin-top: 1rem; width:100%; justify-content:center; padding: 8px;">⟳ Refresh Queue</button>
             </div>
 
             <!-- Ingestion Scan Inspector (overlay modal) -->
@@ -4066,7 +4066,7 @@ Click 'Run' to execute."></textarea>
         console.log('Edit → Save morphs; Cancel discards changes.');
 
         // ============================================================
-        //   CLOUDINARY IMAGES – Moved to a toggleable panel
+        //   IMAGE GALLERY – Moved to a toggleable panel
         // ============================================================
 
         // -------------------------------------------------------------
@@ -4076,7 +4076,7 @@ Click 'Run' to execute."></textarea>
         let pollTimer = null;
 
         async function loadIngestionScans() {
-            const container = document.getElementById('cloudinary-list');
+            const container = document.getElementById('gallery-list');
             if (!container) return;
 
             try {
@@ -4099,7 +4099,7 @@ Click 'Run' to execute."></textarea>
                     }
 
                     const card = document.createElement('div');
-                    card.className = 'cloudinary-item';
+                    card.className = 'gallery-item';
 
                     // Top Row: Image, Name, Status Badge
                     const topRow = document.createElement('div');
@@ -4363,28 +4363,28 @@ Click 'Run' to execute."></textarea>
         });
 
         // ---- Ingestion panel toggle ----
-        const cloudinaryPanel = document.getElementById('cloudinary-panel');
-        const cloudinaryToggle = document.getElementById('cloudinary-toggle-btn');
-        const cloudinaryClose = document.getElementById('cloudinary-close-btn');
-        const refreshCloudinary = document.getElementById('refresh-cloudinary');
+        const galleryPanel = document.getElementById('gallery-panel');
+        const galleryToggle = document.getElementById('gallery-toggle-btn');
+        const galleryClose = document.getElementById('gallery-close-btn');
+        const refreshGallery = document.getElementById('refresh-gallery');
 
-        function toggleCloudinaryPanel() {
-            cloudinaryPanel.classList.toggle('visible');
-            if (cloudinaryPanel.classList.contains('visible')) {
+        function toggleGalleryPanel() {
+            galleryPanel.classList.toggle('visible');
+            if (galleryPanel.classList.contains('visible')) {
                 loadIngestionScans();
             }
         }
 
-        if (cloudinaryToggle) {
-            cloudinaryToggle.addEventListener('click', toggleCloudinaryPanel);
+        if (galleryToggle) {
+            galleryToggle.addEventListener('click', toggleGalleryPanel);
         }
-        if (cloudinaryClose) {
-            cloudinaryClose.addEventListener('click', () => {
-                cloudinaryPanel.classList.remove('visible');
+        if (galleryClose) {
+            galleryClose.addEventListener('click', () => {
+                galleryPanel.classList.remove('visible');
             });
         }
-        if (refreshCloudinary) {
-            refreshCloudinary.addEventListener('click', loadIngestionScans);
+        if (refreshGallery) {
+            refreshGallery.addEventListener('click', loadIngestionScans);
         }
 
         // ============================================================
