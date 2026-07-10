@@ -56,7 +56,29 @@ We successfully decommissioned Cloudinary hosting and migrated all photograph st
     *   Created `api/reprocess-image.js` (fixing a singular/plural routing bug) to re-parse the image from the bucket's public URL.
     *   Pointed the front-end list panel in `public/data/index.html` to pull from `/api/supabase-images`.
 
+## 7. Supabase Database Migration & Asynchronous Ingestion Queue
+
+We migrated from JSONBin to Supabase PostgreSQL and implemented an asynchronous upload-and-go queue system:
+*   **Database Schema**: Created `supabase_schema.sql` with two tables:
+    *   `visiolog_data` - Stores spreadsheet records as JSONB (key-value pairs)
+    *   `visiolog_scans` - Tracks background extraction jobs with status (pending, processing, completed, failed)
+*   **API Migration**:
+    *   Rewrote `api/get-logbook.js` to query Supabase `visiolog_data` table
+    *   Rewrote `api/update-logbook.js` to upsert records to Supabase
+*   **Asynchronous Queue APIs**:
+    *   `api/upload-scan.js` - Accepts multipart file upload, stores in Supabase Storage, creates pending scan record, returns immediately (<2s)
+    *   `api/process-scan.js` - Client-triggered endpoint that processes a specific scan: fetches image, calls Gemini Flash, updates status, merges extracted data
+    *   `api/get-scans.js` - Retrieves all scan jobs ordered by creation date for the gallery UI
+    *   `api/delete-scan.js` - Deletes scan records and associated storage files
+
 ---
 > [!NOTE]
 > **Deployment Status**:
 > All live credentials (Gemini key, Passcode, Supabase URL, and Anon key) have been committed to the local `.env` and pushed to GitHub. The platform is now fully armed and operational in the cloud!
+
+> [!IMPORTANT]
+> **Remaining Work**:
+> - Update `public/upload/index.html` to use `/api/upload-scan` instead of `/api/process-logbook`
+> - Implement Ingestion Gallery UI in `public/data/index.html` (multi-tab sidebar, image cards with status badges, split-pane viewer)
+> - Add client-triggered polling queue engine to auto-process pending scans
+> - Run `supabase_schema.sql` in Supabase Dashboard before deployment

@@ -34,22 +34,32 @@ On the **"Configure Project"** screen, expand the **"Build and Output Settings"*
 
 ---
 
-## Step 4: Environment Variables (Optional for UI tests)
+## Step 4: Environment Variables
 
-If you only want to test the responsiveness and play with the UI grid, you can skip these or put dummy values. However, if you want the AI scanner and Supabase to work, add these keys under **"Environment Variables"**:
+For the platform to function, you must add these keys under **"Environment Variables"**:
 
 | Key | Value |
 | :--- | :--- |
 | `VITE_GEMINI_API_KEY` | *(Your Gemini API key starting with AIzaSy...)* |
 | `VITE_SUPABASE_URL` | `https://[project-id].supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | *(Your public anon key)* |
-| `CLOUDINARY_CLOUD_NAME` | *(Your Cloudinary cloud name)* |
-| `CLOUDINARY_API_KEY` | *(Your 15-digit Cloudinary key)* |
-| `CLOUDINARY_API_SECRET` | *(Your Cloudinary secret)* |
+| `PASSCODE` | *(Your access passcode)* |
 
 ---
 
-## Step 5: Trigger Deploy
+## Step 5: Database Setup (Required)
+
+Before deploying, you must set up your Supabase database:
+
+1. Go to your Supabase project dashboard
+2. Navigate to the **SQL Editor** (icon looks like a terminal)
+3. Open the file `supabase_schema.sql` from your repository
+4. Copy and paste the entire SQL script into the editor
+5. Click **Run** to execute the script
+6. This will create the required tables: `visiolog_data` and `visiolog_scans`
+7. Navigate to **Storage** and create a public bucket named `logbooks`
+
+## Step 6: Trigger Deploy
 
 1. Click the blue **"Deploy"** button at the bottom of the page.
 2. Vercel will clone the repo, run `deploy_product.js` to build the landing page, bundle the serverless functions in `/api/`, and host the static `/public/` assets.

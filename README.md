@@ -2,17 +2,67 @@
 
 VISIOLOG is a modern SaaS platform designed to digitize physical structured documents (logbooks, sheets, registers) into secure, encrypted, and analyzable digital formats.
 
-## 1. Core Platform Overview
+## 🚀 Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/ederaefe/VisiologByDevin.git
+   cd VISIOLOG
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   cd product-page && npm install && cd ..
+   ```
+
+3. **Set up environment variables**
+   Create a `.env` file with:
+   ```env
+   VITE_GEMINI_API_KEY=your_gemini_key
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   PASSCODE=your_access_passcode
+   ```
+
+4. **Set up Supabase database**
+   - Go to your Supabase project dashboard
+   - Open SQL Editor and run `supabase_schema.sql`
+   - Create a public storage bucket named `logbooks`
+
+5. **Run locally**
+   ```bash
+   npm run dev
+   ```
+
+6. **Build for production**
+   ```bash
+   node deploy_product.js
+   ```
+
+---
+
+## 📋 Core Platform Overview
 
 VISIOLOG combines mobile-optimized capture interfaces with Google Gemini 2.5 Flash vision AI to extract structured tables from page photographs. The system follows a human-in-the-loop workflow:
+
 1. **Scan**: Users upload or take a photograph of any physical record page.
 2. **Suggest**: The AI model analyzes the image and suggests a structured table.
 3. **Edit**: Users review and refine the suggested table (insert, rename, delete rows/columns; edit cell values).
 4. **Create**: Users save the verified, encrypted data to the cloud.
 
+### Asynchronous Upload-and-Go
+
+VISIOLOG implements a modern asynchronous ingestion pipeline:
+
+- **Fast Upload**: Images upload to Supabase Storage in under 2 seconds
+- **Background Processing**: AI extraction happens in the background via client-triggered queue
+- **Gallery UI**: View all uploads with status badges (Pending, Processing, Completed, Failed)
+- **Auto-Processing**: Client polling automatically processes pending scans when viewing the Data Ledger
+
 ---
 
-## 2. Product Tiers & SaaS Model
+## 💰 Product Tiers & SaaS Model
 
 VISIOLOG is structured as a two-tier subscription service:
 
@@ -39,7 +89,7 @@ VISIOLOG is structured as a two-tier subscription service:
 
 ---
 
-## 3. Project Architecture
+## 🏗️ Project Architecture
 
 VISIOLOG is built with a decentralized, component-based frontend and serverless API handlers on Vercel:
 
@@ -66,60 +116,113 @@ VISIOLOG is built with a decentralized, component-based frontend and serverless 
                  │              BACKEND INTEGRATIONS            │
                  │                                              │
                  │ • Google Gemini (Vision & Analytics AI)      │
-                 │ • Supabase (Database, Auth, AES Encryption) │
-                 │ • Cloudinary (Encrypted Image Store)         │
+                 │ • Supabase (Database, Auth, Storage, AES)    │
                  └──────────────────────────────────────────────┘
 ```
 
 ### Directories & Structure
 * `product-page/`: Vite + React project for the marketing landing page (located at `/` in production).
 * `public/`: Root static output directory.
-  * `/upload`: Legacy ingestion app bundle.
-  * `/data`: Digital vault and analytics engine app bundle.
+  * `/upload`: Ingestion app with camera capture and file upload.
+  * `/data`: Digital vault with UniverJS spreadsheet engine and gallery UI.
 * `api/`: Serverless functions (Node.js) handling database operations, AI requests, and uploads.
-* `docs/`: Product planning, business plans, system design documents, and PDF generation scripts.
+* `docs/`: Product planning, business plans, system design documents, and credentials guide.
 
 ---
 
-## 4. Local Development
+## 🔧 Technology Stack
 
-### Prerequisites
-* Node.js (v18 or higher)
-* Vercel CLI (optional, for api simulation)
-
-### Installation
-Clone the repository and install dependencies in the root:
-```bash
-npm install
-```
-
-Install dependencies for the product page:
-```bash
-cd product-page
-npm install
-cd ..
-```
-
-### Running Locally
-To run the product landing page:
-```bash
-npm run dev
-```
-
-To build and compile all packages to production assets (copies build artifacts to `public/`):
-```bash
-node deploy_product.js
-```
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Frontend | HTML/CSS/JS, React (product page) | User interfaces |
+| Spreadsheet | UniverJS | High-performance canvas spreadsheet engine |
+| Backend | Vercel Serverless (Node.js) | API endpoints |
+| Database | Supabase (PostgreSQL) | Data storage with RLS |
+| Storage | Supabase Storage | Image hosting |
+| AI | Google Gemini 2.5 Flash | Vision extraction and analytics |
+| Auth | Supabase Auth | User authentication |
 
 ---
 
-## 5. Deployment
+## 📊 Current Implementation Status
+
+### ✅ Completed
+- Database migration from JSONBin to Supabase
+- Asynchronous upload-and-go queue system
+- Supabase Storage integration (replaced Cloudinary)
+- UniverJS spreadsheet engine integration
+- API endpoints: `upload-scan`, `process-scan`, `get-scans`, `delete-scan`
+- Database schema: `visiolog_data`, `visiolog_scans`
+- Mobile-optimized capture interface
+- Glassmorphism UI design system
+
+### 🚧 In Progress
+- Frontend upload script update to use `/api/upload-scan`
+- Ingestion Gallery UI with status badges
+- Split-pane image and data viewer
+- Client-triggered polling queue engine
+
+### 📋 Planned
+- Tier 2 Intelligence Engine features
+- AI analytics assistant with chat
+- External data upload (CSV, Excel, JSON)
+- MCP-embedded tools for AI
+- Advanced analytics (trend detection, anomaly detection)
+
+---
+
+## 📖 Documentation
+
+- [Implementation Plan](implementation_plan.md) - Detailed technical implementation roadmap
+- [Deployment Instructions](deployment_instructions.md) - Step-by-step Vercel deployment guide
+- [Credentials Guide](docs/CREDENTIALS_GUIDE.md) - How to acquire API keys
+- [System Design Document](docs/SYSTEM_DESIGN_DOCUMENT.md) - Complete architecture specification
+- [Business Plan](docs/BUSINESS_PLAN.md) - Product strategy and market analysis
+- [Walkthrough](walkthrough.md) - Development history and progress
+
+---
+
+## 🔐 Security
+
+- **Encryption**: AES-256-GCM at rest, TLS 1.3 in transit
+- **Authentication**: Supabase Auth with Row-Level Security
+- **Isolation**: Per-user session management and data isolation
+- **Privacy**: No data selling, user-owned data with export/delete rights
+
+---
+
+## 🚀 Deployment
 
 The project is configured for deployment on the **Vercel** serverless platform.
 
-Deploying production build:
+### Quick Deploy
 ```bash
 node deploy_product.js
 npx vercel --prod
 ```
+
+### Environment Variables (Required)
+- `VITE_GEMINI_API_KEY` - Google Gemini API key
+- `VITE_SUPABASE_URL` - Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `PASSCODE` - Access passcode for the application
+
+### Database Setup
+Before deploying, run the `supabase_schema.sql` script in your Supabase SQL Editor to create the required tables and storage bucket.
+
+---
+
+## 🤝 Contributing
+
+This is a commercial SaaS product. For inquiries about collaboration or enterprise deployments, please contact the development team.
+
+---
+
+## 📄 License
+
+Proprietary - All rights reserved.
+
+---
+
+**VISIOLOG** - Transforming physical records into digital intelligence.
 
