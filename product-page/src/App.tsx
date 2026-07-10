@@ -61,7 +61,7 @@ function LandingPage() {
   const tier2Price = isAnnual ? 18.40 : 23.00;
 
   return (
-    <>
+    <div className="landing-page">
       {/* Navigation */}
       <nav className="navbar" role="navigation" aria-label="Main Navigation">
         <div className="container">
@@ -352,7 +352,7 @@ function LandingPage() {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 
