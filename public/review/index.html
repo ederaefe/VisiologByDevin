@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VISIOLOG · Review Console</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0b0e;
+            --surface: rgba(255,255,255,.06);
+            --surface-strong: rgba(255,255,255,.1);
+            --border: rgba(255,255,255,.12);
+            --text: #f0f0f4;
+            --muted: #9a9aa8;
+            --faint: #6b6b7a;
+            --accent: #5b9cf5;
+            --success: #4ade80;
+            --warning: #facc15;
+            --error: #ff6b6b;
+            --shadow: 0 12px 40px rgba(0,0,0,.35);
+            font-family: 'Outfit', system-ui, sans-serif;
+        }
+        [data-theme="light"] {
+            --bg: #f2f2f5;
+            --surface: rgba(255,255,255,.65);
+            --surface-strong: rgba(255,255,255,.9);
+            --border: rgba(0,0,0,.1);
+            --text: #1a1a1f;
+            --muted: #6b6b7a;
+            --faint: #8e8e9a;
+            --accent: #2b6ed7;
+            --shadow: 0 12px 40px rgba(0,0,0,.1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            background: var(--bg);
+            background-image: radial-gradient(circle at 20% 10%, rgba(91,156,245,.1), transparent 35%);
+        }
+        button, input, select { font: inherit; }
+        button { cursor: pointer; }
+        .glass {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+        .app { width: min(1500px, 100%); margin: auto; padding: 16px; }
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 16px; padding: 14px 18px; margin-bottom: 14px;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; background:var(--accent); color:white; }
+        h1 { margin: 0; font-size: 1.3rem; }
+        .subtitle { margin: 2px 0 0; color: var(--muted); font-size: .8rem; }
+        .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .btn, select, .filter-input {
+            color: var(--text); background: var(--surface-strong); border:1px solid var(--border);
+            border-radius:9px; padding:9px 12px;
+        }
+        .btn:hover { border-color: var(--accent); }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color:white; }
+        .btn.danger { color: var(--error); }
+        .layout { display:grid; grid-template-columns: 290px minmax(0,1fr); gap:14px; min-height: calc(100vh - 105px); }
+        .worklist { padding: 14px; overflow:auto; }
+        .worklist-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+        .worklist h2 { font-size:1rem; margin:0; }
+        .scan-list { display:grid; gap:9px; }
+        .scan-card { padding:10px; border:1px solid var(--border); border-radius:11px; cursor:pointer; background:rgba(0,0,0,.08); }
+        .scan-card.active, .scan-card:hover { border-color:var(--accent); }
+        .scan-card img { width:100%; height:90px; object-fit:cover; border-radius:7px; margin-bottom:7px; }
+        .scan-title { font-size:.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .scan-meta { color:var(--muted); font-size:.72rem; display:flex; justify-content:space-between; gap:4px; margin-top:4px; }
+        .badge { display:inline-flex; align-items:center; border-radius:99px; padding:3px 7px; font-size:.67rem; background:rgba(250,204,21,.15); color:var(--warning); }
+        .badge.ok { color:var(--success); background:rgba(74,222,128,.14); }
+        .badge.bad { color:var(--error); background:rgba(255,107,107,.14); }
+        .empty { color:var(--muted); text-align:center; padding:30px 12px; font-size:.85rem; }
+        .review-panel { min-width:0; display:grid; grid-template-columns:minmax(280px, .9fr) minmax(360px, 1.1fr); gap:14px; }
+        .source-panel, .records-panel { padding:14px; min-width:0; }
+        .panel-title { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
+        .panel-title h2 { margin:0; font-size:1rem; }
+        .source-tools { display:flex; gap:6px; flex-wrap:wrap; }
+        .source-stage { min-height:470px; display:grid; place-items:center; overflow:hidden; background:rgba(0,0,0,.2); border-radius:11px; }
+        .source-stage img { max-width:100%; max-height:70vh; transform-origin:center; transition:transform .2s, filter .2s; }
+        .records-scroll { max-height:calc(100vh - 160px); overflow:auto; padding-right:3px; }
+        .record-card { border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; }
+        .record-head { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:9px; }
+        .record-title { font-size:.83rem; color:var(--muted); }
+        .field-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+        .field { min-width:0; }
+        .field label { display:flex; justify-content:space-between; gap:5px; color:var(--muted); font-size:.7rem; margin-bottom:3px; }
+        .confidence { color:var(--faint); font-size:.66rem; }
+        .field input { width:100%; color:var(--text); background:rgba(0,0,0,.12); border:1px solid var(--border); border-radius:7px; padding:8px; }
+        .field input:focus { outline:2px solid rgba(91,156,245,.35); border-color:var(--accent); }
+        .field.has-error input { border-color:var(--error); box-shadow:0 0 0 1px rgba(255,107,107,.18); }
+        .field.low-confidence input { border-color:var(--warning); }
+        .error-text { display:block; color:var(--error); font-size:.65rem; margin-top:3px; }
+        .record-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+        .audit { margin-top:10px; border-top:1px solid var(--border); padding-top:8px; }
+        .audit summary { cursor:pointer; color:var(--muted); font-size:.73rem; }
+        .audit-item { color:var(--faint); font-size:.68rem; margin-top:6px; }
+        .toast { position:fixed; bottom:18px; right:18px; max-width:320px; padding:11px 14px; border-radius:10px; background:#19191f; color:#fff; opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s; }
+        .toast.show { opacity:1; transform:translateY(0); }
+        #passcode-overlay { position:fixed; inset:0; display:none; place-items:center; z-index:20; background:rgba(0,0,0,.82); backdrop-filter:blur(12px); }
+        #passcode-overlay.active { display:grid; }
+        .passcode-card { width:min(360px,calc(100% - 32px)); padding:25px; text-align:center; }
+        .passcode-card h2 { margin:0 0 6px; }
+        .passcode-card p { color:var(--muted); font-size:.85rem; }
+        .passcode-card input { width:100%; padding:11px; color:var(--text); background:var(--surface-strong); border:1px solid var(--border); border-radius:8px; }
+        .passcode-card button { width:100%; margin-top:10px; }
+        .passcode-error { color:var(--error); min-height:20px; font-size:.75rem; margin-top:7px; }
+        @media (max-width: 980px) {
+            .layout { grid-template-columns: 230px minmax(0,1fr); }
+            .review-panel { grid-template-columns:1fr; }
+            .source-stage { min-height:260px; }
+            .records-scroll { max-height:none; }
+        }
+        @media (max-width: 680px) {
+            .app { padding:8px; }
+            .layout { grid-template-columns:1fr; }
+            .worklist { max-height:300px; }
+            .field-grid { grid-template-columns:1fr; }
+            .topbar { align-items:flex-start; flex-direction:column; }
+        }
+    </style>
+</head>
+<body>
+    <div id="passcode-overlay">
+        <div class="passcode-card glass">
+            <h2>Admin review access</h2>
+            <p>Enter the VISIOLOG passcode to continue.</p>
+            <input id="passcode-input" type="text" autocomplete="off" placeholder="Passcode">
+            <div id="passcode-error" class="passcode-error"></div>
+            <button id="passcode-btn" class="btn primary">Verify</button>
+        </div>
+    </div>
+
+    <main class="app">
+        <header class="topbar glass">
+            <div class="brand">
+                <div class="brand-mark">✓</div>
+                <div><h1>VISIOLOG Review Console</h1><p class="subtitle">Correct, approve, or reject extracted records</p></div>
+            </div>
+            <div class="toolbar">
+                <select id="list-filter" aria-label="Worklist filter">
+                    <option value="flagged">Flagged scans</option>
+                    <option value="all">All scans</option>
+                </select>
+                <button class="btn" id="refresh-btn">Refresh</button>
+                <button class="btn" id="theme-btn">Theme</button>
+            </div>
+        </header>
+
+        <section class="layout">
+            <aside class="worklist glass">
+                <div class="worklist-head"><h2>Review worklist</h2><span id="scan-count" class="badge">0</span></div>
+                <div id="scan-list" class="scan-list"><div class="empty">Loading scans…</div></div>
+            </aside>
+            <section class="review-panel">
+                <div class="source-panel glass">
+                    <div class="panel-title"><h2>Source photograph</h2><div class="source-tools">
+                        <button class="btn" id="zoom-out">−</button><button class="btn" id="zoom-in">+</button>
+                        <button class="btn" id="rotate">Rotate</button><button class="btn" id="reset-image">Reset</button>
+                    </div></div>
+                    <div class="source-tools" style="margin-bottom:8px;">
+                        <label class="confidence">Brightness <input id="brightness" type="range" min="50" max="180" value="100"></label>
+                        <label class="confidence">Contrast <input id="contrast" type="range" min="50" max="180" value="100"></label>
+                    </div>
+                    <div class="source-stage"><img id="source-image" alt="Select a scan to view its source image"></div>
+                </div>
+                <div class="records-panel glass">
+                    <div class="panel-title"><h2 id="records-title">Select a scan</h2><span id="template-name" class="badge">—</span></div>
+                    <div id="records-list" class="records-scroll"><div class="empty">Choose a scan from the worklist.</div></div>
+                </div>
+            </section>
+        </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <script>
+        const state = { scans: [], records: [], selectedScan: null, zoom: 1, rotation: 0 };
+        const threshold = 0.85;
+        const $ = selector => document.querySelector(selector);
+
+        function toast(message) {
+            const element = $('#toast');
+            element.textContent = message;
+            element.classList.add('show');
+            clearTimeout(element._timer);
+            element._timer = setTimeout(() => element.classList.remove('show'), 3500);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            }[char]));
+        }
+
+        function formatDate(value) {
+            return value ? new Date(value).toLocaleString() : 'Unknown date';
+        }
+
+        async function getJson(url, options) {
+            const response = await fetch(url, options);
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.error || 'Request failed');
+            return payload;
+        }
+
+        async function loadWorklist() {
+            const all = $('#list-filter').value === 'all';
+            const payload = await getJson(`/api/get-records?mode=worklist${all ? '&all=true' : ''}`);
+            state.scans = payload.scans || [];
+            $('#scan-count').textContent = state.scans.length;
+            renderWorklist();
+        }
+
+        function renderWorklist() {
+            const list = $('#scan-list');
+            if (!state.scans.length) {
+                list.innerHTML = '<div class="empty">No scans match this filter.</div>';
+                return;
+            }
+            list.innerHTML = state.scans.map(scan => `
+                <article class="scan-card ${state.selectedScan === scan.id ? 'active' : ''}" data-scan-id="${escapeHtml(scan.id)}">
+                    ${scan.url ? `<img src="${escapeHtml(scan.url)}" alt="Source page">` : ''}
+                    <div class="scan-title">${escapeHtml(scan.filename)}</div>
+                    <div class="scan-meta"><span>${escapeHtml(formatDate(scan.created_at))}</span><span class="badge ${scan.flagged_count ? '' : 'ok'}">${scan.flagged_count} flagged</span></div>
+                    <div class="scan-meta"><span>Needs review: ${scan.counts?.needs_review || 0}</span><span>Approved: ${scan.counts?.approved || 0}</span></div>
+                </article>
+            `).join('');
+            list.querySelectorAll('[data-scan-id]').forEach(card => {
+                card.addEventListener('click', () => selectScan(card.dataset.scanId));
+            });
+        }
+
+        async function selectScan(scanId) {
+            state.selectedScan = scanId;
+            const scan = state.scans.find(item => item.id === scanId);
+            if (scan) {
+                $('#source-image').src = scan.url || '';
+                $('#records-title').textContent = `${scan.filename} · records`;
+            }
+            renderWorklist();
+            try {
+                const payload = await getJson(`/api/get-records?scan_id=${encodeURIComponent(scanId)}&include_audit=true`);
+                state.records = payload.records || [];
+                const template = state.records[0]?.template;
+                $('#template-name').textContent = template?.name || 'Default template';
+                renderRecords();
+            } catch (error) {
+                toast(error.message);
+            }
+        }
+
+        function errorFor(record, key) {
+            return (record.validation_errors || []).find(error => error.field === key);
+        }
+
+        function renderRecords() {
+            const list = $('#records-list');
+            if (!state.records.length) {
+                list.innerHTML = '<div class="empty">No records found for this scan.</div>';
+                return;
+            }
+            list.innerHTML = state.records.map(record => {
+                const fields = record.template?.fields || [];
+                const fieldMarkup = fields.map(field => {
+                    const error = errorFor(record, field.key);
+                    const confidence = Number(record.confidence?.[field.key] ?? 0);
+                    const confidenceText = `${Math.round(confidence * 100)}%`;
+                    const classes = `${error ? 'has-error' : ''} ${confidence < threshold ? 'low-confidence' : ''}`;
+                    return `<div class="field ${classes}">
+                        <label for="record-${record.id}-${escapeHtml(field.key)}">${escapeHtml(field.label)} <span class="confidence">${confidenceText}</span></label>
+                        <input id="record-${record.id}-${escapeHtml(field.key)}" data-record-id="${escapeHtml(record.id)}" data-field-key="${escapeHtml(field.key)}" value="${escapeHtml(record.data?.[field.key] ?? '')}">
+                        ${error ? `<span class="error-text">${escapeHtml(error.message)}</span>` : ''}
+                    </div>`;
+                }).join('');
+                const auditMarkup = (record.audits || []).map(audit => `
+                    <div class="audit-item"><strong>${escapeHtml(audit.action)}</strong> · ${escapeHtml(audit.actor)} · ${escapeHtml(formatDate(audit.created_at))}</div>
+                `).join('') || '<div class="audit-item">No audit events yet.</div>';
+                return `<article class="record-card" data-record-card="${escapeHtml(record.id)}">
+                    <div class="record-head"><span class="record-title">Row ${record.row_index + 1} · ${escapeHtml(record.validation_status)}</span><span class="badge ${record.review_status === 'approved' ? 'ok' : record.review_status === 'rejected' ? 'bad' : ''}">${escapeHtml(record.review_status)}</span></div>
+                    <div class="field-grid">${fieldMarkup}</div>
+                    <div class="record-actions">
+                        <button class="btn primary" data-action="save" data-record-id="${escapeHtml(record.id)}">Save</button>
+                        <button class="btn" data-action="approve" data-record-id="${escapeHtml(record.id)}">Approve</button>
+                        <button class="btn danger" data-action="reject" data-record-id="${escapeHtml(record.id)}">Reject</button>
+                        <button class="btn" data-action="reprocess">Reprocess scan</button>
+                    </div>
+                    <details class="audit"><summary>Audit history (${record.audits?.length || 0})</summary>${auditMarkup}</details>
+                </article>`;
+            }).join('');
+            list.querySelectorAll('[data-action]').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.dataset.action === 'reprocess') reprocessScan();
+                    else updateRecord(button.dataset.recordId, button.dataset.action);
+                });
+            });
+        }
+
+        function dataForRecord(recordId) {
+            const data = {};
+            document.querySelectorAll(`[data-record-id="${CSS.escape(recordId)}"][data-field-key]`).forEach(input => {
+                data[input.dataset.fieldKey] = input.value;
+            });
+            return data;
+        }
+
+        async function updateRecord(recordId, action) {
+            try {
+                const payload = await getJson('/api/update-record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: recordId, action, data: dataForRecord(recordId), actor: 'admin' })
+                });
+                toast(`${action[0].toUpperCase()}${action.slice(1)} complete`);
+                await selectScan(state.selectedScan);
+                return payload;
+            } catch (error) {
+                toast(error.message);
+            }
+        }
+
+        async function reprocessScan() {
+            if (!state.selectedScan) return;
+            try {
+                await getJson(`/api/process-scan?id=${encodeURIComponent(state.selectedScan)}`, { method: 'POST' });
+                toast('Scan reprocessed');
+                await loadWorklist();
+                await selectScan(state.selectedScan);
+            } catch (error) {
+                toast(error.message);
+            }
+        }
+
+        function updateImage() {
+            const image = $('#source-image');
+            image.style.transform = `scale(${state.zoom}) rotate(${state.rotation}deg)`;
+            image.style.filter = `brightness(${$('#brightness').value}%) contrast(${$('#contrast').value}%)`;
+        }
+        $('#zoom-in').addEventListener('click', () => { state.zoom = Math.min(3, state.zoom + .1); updateImage(); });
+        $('#zoom-out').addEventListener('click', () => { state.zoom = Math.max(.5, state.zoom - .1); updateImage(); });
+        $('#rotate').addEventListener('click', () => { state.rotation = (state.rotation + 90) % 360; updateImage(); });
+        $('#reset-image').addEventListener('click', () => {
+            state.zoom = 1; state.rotation = 0; $('#brightness').value = 100; $('#contrast').value = 100; updateImage();
+        });
+        $('#brightness').addEventListener('input', updateImage);
+        $('#contrast').addEventListener('input', updateImage);
+        $('#refresh-btn').addEventListener('click', () => loadWorklist().catch(error => toast(error.message)));
+        $('#list-filter').addEventListener('change', () => loadWorklist().catch(error => toast(error.message)));
+        $('#theme-btn').addEventListener('click', () => {
+            const root = document.documentElement;
+            root.toggleAttribute('data-theme');
+            if (root.hasAttribute('data-theme')) localStorage.setItem('visiolog_theme', 'light');
+            else localStorage.setItem('visiolog_theme', 'dark');
+        });
+        if (localStorage.getItem('visiolog_theme') === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+        (function setupPasscode() {
+            const overlay = $('#passcode-overlay');
+            const input = $('#passcode-input');
+            const button = $('#passcode-btn');
+            const error = $('#passcode-error');
+            if (sessionStorage.getItem('visiolog_authenticated') === 'true') {
+                loadWorklist().catch(err => toast(err.message));
+                return;
+            }
+            overlay.classList.add('active');
+            input.focus();
+            let attempts = 0;
+            async function verify() {
+                if (!input.value.trim()) { error.textContent = 'Enter a passcode.'; return; }
+                button.disabled = true;
+                try {
+                    const result = await getJson('/api/validate-passcode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ passcode: input.value.trim() })
+                    });
+                    if (!result.valid) throw new Error('Incorrect passcode.');
+                    sessionStorage.setItem('visiolog_authenticated', 'true');
+                    overlay.classList.remove('active');
+                    loadWorklist().catch(err => toast(err.message));
+                } catch (err) {
+                    attempts += 1;
+                    error.textContent = attempts >= 4 ? 'Access locked.' : `${err.message} ${4 - attempts} attempts left.`;
+                } finally {
+                    button.disabled = attempts >= 4;
+                }
+            }
+            button.addEventListener('click', verify);
+            input.addEventListener('keydown', event => { if (event.key === 'Enter') verify(); });
+        })();
+    </script>
+</body>
+</html>

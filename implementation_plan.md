@@ -14,7 +14,7 @@ VISIOLOG is a digitization layer over physical logbooks: an officer photographs 
 |-----------|-------|--------|
 | **M1** | Core pipeline: field schema, visitor-specific Gemini extraction with per-field confidence, validation/cleaning engine, relational records table | ✅ Done (PR #1) |
 | **M1.5** | **Configurable logbook templates** (multi-industry). Refactor records to template-driven fields; add `template_id` to scans | ✅ Done (this branch) |
-| **M2** | Admin **review & correction UI**: source image + extracted data side-by-side, edit/approve/reject flagged rows, audit history | 📋 Planned |
+| **M2** | Admin **review & correction UI**: source image + extracted data side-by-side, edit/approve/reject flagged rows, audit history | ✅ Done (this branch) |
 | **M1-U** | **Minimal uploader UX**: officer-only flow (batch upload → preview → complete → close); no redirect into the data/admin app | ✅ Done (this branch) |
 | **M3** | Typed **search & dashboard** (multi-field filters, KPI cards) + CSV/Excel/PDF export | 📋 Planned |
 | **M4** | **Analytics**: visitors over time, peak hours, hall/department distribution, trends | 📋 Planned |
@@ -75,14 +75,18 @@ Starter templates and field decisions:
 
 ---
 
-## M2 — Review & Correction UI 📋
+## M2 — Review & Correction UI ✅
 
 **Goal:** administrators fix AI mistakes on flagged rows.
 
-- Source image alongside extracted data (zoom/rotate/brightness/contrast).
-- Edit field values; **approve** / **reject** / **reprocess** per record.
-- Filter to `needs_review` / `invalid` records.
-- Correction audit history (original vs. corrected values, who/when).
+Implemented:
+- **[NEW] `public/review/index.html`** — separate passcode-gated admin console with a scan worklist, source-image split pane, image controls, and responsive record editor.
+- **[NEW] `api/get-records.js`** — template-aware record retrieval, flagged/all scan worklists, public source-image URLs, and optional audit history.
+- **[NEW] `api/update-record.js`** — save/approve/reject actions, single-record re-validation, and audit persistence.
+- **[MODIFY] `supabase_schema.sql`** — `visiolog_record_audit` table and `review_status` documentation for `pending`, `needs_review`, `approved`, and `rejected`.
+- **[MODIFY] `vercel.json`** — `/review` rewrite.
+
+The review editor renders fields dynamically from each record's `logbook_templates.fields` definition. It shows AI confidence percentages, highlights low-confidence and validation-error fields, and supports reprocessing through the existing `/api/process-scan?id=` endpoint. Human actions are recorded with before/after field changes, action, actor, and timestamp.
 
 ---
 

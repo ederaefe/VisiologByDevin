@@ -127,7 +127,7 @@ create table if not exists public.visiolog_records (
     overall_confidence numeric not null default 0,
     validation_status text not null,
     validation_errors jsonb not null default '[]'::jsonb,
-    review_status text not null,
+    review_status text not null, -- pending, needs_review, approved, rejected
     ai_model_version text not null,
     raw_extra jsonb not null default '{}'::jsonb,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
@@ -142,4 +142,23 @@ create index if not exists visiolog_records_review_status_idx
 alter table public.visiolog_records enable row level security;
 
 create policy "Allow public access to visiolog_records" on public.visiolog_records
+    for all using (true) with check (true);
+
+-- 5. Human review audit trail
+create table if not exists public.visiolog_record_audit (
+    id uuid primary key default gen_random_uuid(),
+    record_id uuid not null references public.visiolog_records(id) on delete cascade,
+    scan_id uuid references public.visiolog_scans(id) on delete set null,
+    action text not null,
+    changes jsonb not null default '{}'::jsonb,
+    actor text not null default 'admin',
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create index if not exists visiolog_record_audit_record_id_idx
+    on public.visiolog_record_audit (record_id);
+
+alter table public.visiolog_record_audit enable row level security;
+
+create policy "Allow public access to visiolog_record_audit" on public.visiolog_record_audit
     for all using (true) with check (true);
