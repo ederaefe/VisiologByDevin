@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {
     DEFAULT_SECURITY_GATE_TEMPLATE,
     STARTER_TEMPLATES
-} from '../api/lib/visitor-schema.js';
-import { validateVisitorRecords } from '../api/lib/validation.js';
+} from '../lib/visitor-schema.js';
+import { validateVisitorRecords } from '../lib/validation.js';
 
 function confidenceFor(template, value = 0.99) {
     return Object.fromEntries(template.fields.map(field => [field.key, value]));

@@ -36,8 +36,8 @@ VISIOLOG is a digitization layer over physical logbooks: an officer photographs 
 
 **Goal:** extract → validate → store, producing structured, confidence-scored records.
 
-- **[NEW] `api/lib/visitor-schema.js`** — canonical field list (single source of truth), confidence thresholds, model version, and the Gemini extraction prompt derived from the field list so prompt/validation/DB never drift.
-- **[NEW] `api/lib/validation.js`** — pure, dependency-free validation/cleaning engine: blank-row removal, required/identity checks, Nigerian phone normalization, IMEI digit/length checks, time & date normalization, `time_out < time_in`, batch duplicate detection (matric/IMEI), per-field + overall confidence with **Needs Review** flagging. Emits `validation_status ∈ {valid, needs_review, invalid}`, `review_status ∈ {pending, needs_review}`, and `validation_errors[]`.
+- **[NEW] `lib/visitor-schema.js`** — canonical field list (single source of truth), confidence thresholds, model version, and the Gemini extraction prompt derived from the field list so prompt/validation/DB never drift.
+- **[NEW] `lib/validation.js`** — pure, dependency-free validation/cleaning engine: blank-row removal, required/identity checks, Nigerian phone normalization, IMEI digit/length checks, time & date normalization, `time_out < time_in`, batch duplicate detection (matric/IMEI), per-field + overall confidence with **Needs Review** flagging. Emits `validation_status ∈ {valid, needs_review, invalid}`, `review_status ∈ {pending, needs_review}`, and `validation_errors[]`.
 - **[MODIFY] `api/process-scan.js`** — rewired to extract → mark `validating` → validate → replace + insert rows into `visiolog_records` → set scan status `completed` / `needs_review` / `failed`.
 - **[MODIFY] `supabase_schema.sql`** — new `visiolog_records` table (typed visitor columns + confidence/validation/review metadata + indexes; FK to `visiolog_scans`). `visiolog_data` blob left intact for the legacy dashboard.
 - **[MODIFY] `.env.example`** — added `GEMINI_API_KEY` (APIs read it; only `VITE_GEMINI_API_KEY` was documented → extraction would silently fail).
@@ -55,8 +55,8 @@ Implemented:
 - **[NEW] `logbook_templates`** table with permissive RLS and idempotent starter seeds.
 - **[MODIFY] `visiolog_scans`** — nullable `template_id` references the selected logbook template.
 - **[REFACTOR] `visiolog_records`** — visitor-specific columns replaced by `data jsonb`; metadata remains, with GIN `data` and `review_status` indexes.
-- **[REFACTOR] `api/lib/visitor-schema.js`** — field taxonomy, default fallback template, starter definitions, and template-derived Gemini prompts.
-- **[REFACTOR] `api/lib/validation.js`** — phone/IMEI/time/date/required/identity/dedupe/confidence rules resolve from field types and flags.
+- **[REFACTOR] `lib/visitor-schema.js`** — field taxonomy, default fallback template, starter definitions, and template-derived Gemini prompts.
+- **[REFACTOR] `lib/validation.js`** — phone/IMEI/time/date/required/identity/dedupe/confidence rules resolve from field types and flags.
 - **[MODIFY] `api/process-scan.js`** — resolves the scan template, falls back to the default template, and stores template-linked records.
 
 Starter templates and field decisions:

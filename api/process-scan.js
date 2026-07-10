@@ -5,8 +5,8 @@ import {
     DEFAULT_TEMPLATE,
     createExtractionPrompt,
     normalizeTemplate
-} from './lib/visitor-schema.js';
-import { validateVisitorRecords } from './lib/validation.js';
+} from '../lib/visitor-schema.js';
+import { validateVisitorRecords } from '../lib/validation.js';
 
 function parseModelJson(responseText) {
     const sanitizedText = responseText
