@@ -5,9 +5,9 @@ import {
     DEFAULT_TEMPLATE,
     createExtractionPrompt,
     normalizeTemplate
-} from './lib/visitor-schema.js';
-import { parseExtractionCsv } from './lib/csv-parser.js';
-import { validateVisitorRecords } from './lib/validation.js';
+} from '../lib/visitor-schema.js';
+import { parseExtractionCsv } from '../lib/csv-parser.js';
+import { validateVisitorRecords } from '../lib/validation.js';
 
 async function resolveTemplate(supabase, scanRecord) {
     if (scanRecord.template_id) {
