@@ -302,7 +302,7 @@ VISIOLOG uses a **serverless client-server architecture** with a **two-tier SaaS
 
 #### 5.1.1 Capture Page (`/upload`)
 
-**File**: `public/upload/index.html`
+**File**: `product-page/src/Upload.tsx`
 
 **Responsibility**: Capture record images and submit them for AI extraction.
 
@@ -950,7 +950,7 @@ Repository (GitHub)
 | Rule Type | Source          | Destination                | Notes                    |
 |-----------|-----------------|----------------------------|--------------------------|
 | Redirect  | `/`             | `/upload`                  | Root → capture page      |
-| Rewrite   | `/upload`       | `/upload/index.html`       | Clean URL                |
+| Rewrite   | `/upload`       | `/index.html`              | React SPA upload route   |
 | Rewrite   | `/records`      | `/records/index.html`      | Clean URL                |
 | Rewrite   | `/analytics`    | `/analytics/index.html`    | Clean URL (Tier 2)       |
 | Rewrite   | `/login`        | `/login/index.html`        | Clean URL                |

@@ -1,20 +1,16 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Cloud (top) -->
-  <path d="M8 16C6.9 16 6 16.9 6 18C6 18.5 6.2 19 6.5 19.4C5.1 20.2 4 21.8 4 23.5C4 26 6 28 8.5 28H20C22.8 28 25 25.8 25 23C25 20.6 23.4 18.6 21.3 18.2C21.1 17.2 20.2 16.5 19 16.5C17.9 16.5 17 17.2 16.8 18.1C15.5 17.4 14 17 12.5 17C10.3 17 8.3 17.8 6.9 19.1C6.6 18.5 6 18 5.2 18" fill="#0066FF" opacity="0.9"/>
-  
-  <!-- Book (bottom) -->
-  <g transform="translate(10, 8)">
-    <!-- Book spine (left) -->
-    <rect x="0" y="0" width="2" height="12" fill="#0066FF" opacity="0.8"/>
-    
-    <!-- Right page -->
-    <rect x="2" y="0" width="8" height="12" fill="#0066FF" opacity="0.6" rx="0.5"/>
-    
-    <!-- Book lines (text) -->
-    <line x1="4" y1="2" x2="8" y2="2" stroke="#ffffff" stroke-width="0.8" opacity="0.7"/>
-    <line x1="4" y1="4" x2="8" y2="4" stroke="#ffffff" stroke-width="0.8" opacity="0.7"/>
-    <line x1="4" y1="6" x2="8" y2="6" stroke="#ffffff" stroke-width="0.8" opacity="0.7"/>
-    <line x1="4" y1="8" x2="8" y2="8" stroke="#ffffff" stroke-width="0.8" opacity="0.7"/>
-    <line x1="4" y1="10" x2="7" y2="10" stroke="#ffffff" stroke-width="0.8" opacity="0.7"/>
-  </g>
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VISIOLOG">
+  <defs>
+    <linearGradient id="vl-tile" x1="16" y1="8" x2="80" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#262B3B"/>
+      <stop offset="1" stop-color="#0D0F16"/>
+    </linearGradient>
+    <linearGradient id="vl-mark" x1="30" y1="26" x2="66" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A9B7FF"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="84" height="84" rx="24" fill="url(#vl-tile)"/>
+  <rect x="6.75" y="6.75" width="82.5" height="82.5" rx="23.25" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5"/>
+  <path d="M31 35 L48 65 L65 35" fill="none" stroke="url(#vl-mark)" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="48" cy="28.5" r="5" fill="url(#vl-mark)"/>
 </svg>

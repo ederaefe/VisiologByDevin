@@ -1,71 +1,57 @@
-# VISIOLOG — Vercel Deployment Instructions
+# VISIOLOG deployment
 
-Follow these exact steps on the Vercel dashboard to deploy the entire VISIOLOG application, view the user interface, and test responsiveness.
+## Vercel project
 
----
+Create a Vercel project from the repository root. Use:
 
-## Step 1: Create a Vercel Project
+| Setting | Value |
+| --- | --- |
+| Framework preset | Other |
+| Root directory | `./` |
+| Build command | `npm run build` |
+| Output directory | `public` |
+| Node.js | 22.x |
 
-1. Go to [Vercel](https://vercel.com/) and sign in.
-2. From your Vercel Dashboard, click the **"Add New..."** button (top right) and select **"Project"**.
+The build runs `deploy_product.js`, builds the React/Vite app in `product-page/`, and copies the generated entrypoint/assets into `public/`. Vercel then serves the static output and discovers serverless functions in `api/`.
 
----
+## Environment and Supabase
 
-## Step 2: Import the GitHub Repository
+Configure the required server-side Gemini, Supabase, and passcode values in Vercel's Environment Variables panel. Use the repository's credentials guide for names and scopes, and keep real values out of Git.
 
-1. Under **"Import Git Repository"**, look for your GitHub connection.
-2. Select your repository: `ederaefe/Visiolog` (or click search if it is not immediately visible).
-3. Click the **"Import"** button.
+In Supabase:
 
----
+1. Run `supabase_schema.sql` in the SQL editor.
+2. Create the `logbooks` Storage bucket used by image uploads.
+3. Confirm the database and Storage policies match the deployment's access model before production use.
 
-## Step 3: Configure Build & Output Settings
+The active architecture uses Supabase PostgreSQL/Storage. JSONBin and Cloudinary are not required.
 
-On the **"Configure Project"** screen, expand the **"Build and Output Settings"** section. Set them as follows:
+## Routes
 
-*   **Framework Preset**: Select **"Other"** (Vercel may default to this automatically).
-*   **Build Command**: 
-    *   Toggle the **"OVERRIDE"** switch to **ON** (green).
-    *   Type: `npm run build`
-*   **Output Directory**: 
-    *   Toggle the **"OVERRIDE"** switch to **ON** (green).
-    *   Type: `public`
-*   **Root Directory**: Leave it as `./` (do not change).
+`vercel.json` preserves these application boundaries:
 
----
+- `/` and `/upload` → the built React SPA
+- `/data` → `public/data/index.html` (static Univer workspace)
+- `/review` → `public/review/index.html` (legacy operations console)
+- `/api/*` → Vercel serverless functions
 
-## Step 4: Environment Variables
+The supplied favicon is available at `/favicon.svg`.
 
-For the platform to function, you must add these keys under **"Environment Variables"**:
+## Smoke test
 
-| Key | Value |
-| :--- | :--- |
-| `VITE_GEMINI_API_KEY` | *(Your Gemini API key starting with AIzaSy...)* |
-| `VITE_SUPABASE_URL` | `https://[project-id].supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | *(Your public anon key)* |
-| `PASSCODE` | *(Your access passcode)* |
+After deployment:
 
----
+1. Open `/` and confirm the SPA shell loads.
+2. Open `/upload`, enter the configured passcode, and select an image.
+3. Confirm the upload reaches `/api/upload-scan` and a pending scan is visible from the data workspace.
+4. Open `/data` and confirm the existing spreadsheet and scan gallery load.
+5. Verify that `/review` remains available until Phase 4 retires it.
 
-## Step 5: Database Setup (Required)
+Text upload currently parses and previews CSV/TXT/XLSX locally only. Its persisted ingestion endpoint and external synchronization behavior are scheduled for Phase 4.
 
-Before deploying, you must set up your Supabase database:
+## Migration roadmap
 
-1. Go to your Supabase project dashboard
-2. Navigate to the **SQL Editor** (icon looks like a terminal)
-3. Open the file `supabase_schema.sql` from your repository
-4. Copy and paste the entire SQL script into the editor
-5. Click **Run** to execute the script
-6. This will create the required tables: `visiolog_data` and `visiolog_scans`
-7. Navigate to **Storage** and create a public bucket named `logbooks`
-
-## Step 6: Trigger Deploy
-
-1. Click the blue **"Deploy"** button at the bottom of the page.
-2. Vercel will clone the repo, run `deploy_product.js` to build the landing page, bundle the serverless functions in `/api/`, and host the static `/public/` assets.
-3. Once completed (approx. 1-2 minutes), you will receive a preview card. Click it to launch the live site!
-
----
-> [!TIP]
-> **Testing Responsiveness**:
-> Open the deployed link on your phone, or right-click the page in your browser, select **Inspect**, and toggle the device emulator toolbar (Ctrl+Shift+M) to test the mobile UI frames!
+1. **Complete:** React + TypeScript and image/text upload UI.
+2. **Next:** remove validation and review status coupling from the Supabase extraction pipeline.
+3. **Next:** migrate `/data` to React + npm Univer.
+4. **Later:** persist text ingestion, add integrations/sync, and retire `/review`.

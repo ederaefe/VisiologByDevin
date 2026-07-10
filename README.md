@@ -1,228 +1,93 @@
 # VISIOLOG
 
-VISIOLOG is a modern SaaS platform designed to digitize physical structured documents (logbooks, sheets, registers) into secure, encrypted, and analyzable digital formats.
+VISIOLOG turns photographed logbook pages into structured records. The application currently combines a React + TypeScript Vite upload experience with the existing Univer spreadsheet workspace.
 
-## 🚀 Quick Start
+## Current product
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ederaefe/VisiologByDevin.git
-   cd VISIOLOG
-   ```
+- `/` — React/Vite marketing site
+- `/upload` — passcode-gated React upload workspace
+- `/data` — existing static UniverJS spreadsheet and image queue
+- `/review` — existing static operations console (scheduled for retirement)
+- `/api/*` — Vercel serverless functions
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   cd product-page && npm install && cd ..
-   ```
+The architecture is Supabase-only for application storage: PostgreSQL stores records and templates, while Supabase Storage stores source images. Gemini is used by the server-side extraction function. JSONBin and Cloudinary are not part of the active architecture.
 
-3. **Set up environment variables**
-   Create a `.env` file with:
-   ```env
-   VITE_GEMINI_API_KEY=your_gemini_key
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   PASSCODE=your_access_passcode
-   ```
+## Upload flows
 
-4. **Set up Supabase database**
-   - Go to your Supabase project dashboard
-   - Open SQL Editor and run `supabase_schema.sql`
-   - Create a public storage bucket named `logbooks`
+### Image
 
-5. **Run locally**
-   ```bash
-   npm run dev
-   ```
+The React upload page accepts camera captures and multiple gallery images, compresses them in the browser, and sends each image to:
 
-6. **Build for production**
-   ```bash
-   node deploy_product.js
-   ```
-
----
-
-## 📋 Core Platform Overview
-
-VISIOLOG combines mobile-optimized capture interfaces with Google Gemini 2.5 Flash vision AI to extract structured tables from page photographs. The system follows a human-in-the-loop workflow:
-
-1. **Scan**: Users upload or take a photograph of any physical record page.
-2. **Suggest**: The AI model analyzes the image and suggests a structured table.
-3. **Edit**: Users review and refine the suggested table (insert, rename, delete rows/columns; edit cell values).
-4. **Create**: Users save the verified, encrypted data to the cloud.
-
-### Asynchronous Upload-and-Go
-
-VISIOLOG implements a modern asynchronous ingestion pipeline:
-
-- **Fast Upload**: Images upload to Supabase Storage in under 2 seconds
-- **Background Processing**: AI extraction happens in the background via client-triggered queue
-- **Gallery UI**: View all uploads with status badges (Pending, Processing, Completed, Failed)
-- **Auto-Processing**: Client polling automatically processes pending scans when viewing the Data Ledger
-
----
-
-## 💰 Product Tiers & SaaS Model
-
-VISIOLOG is structured as a two-tier subscription service:
-
-### Tier 1: Records Vault ($8/month)
-* **Goal**: Seamless retrieval, digitizing, and long-term secure archiving.
-* **Core features**:
-  * Ingest and digitize physical records via mobile-optimized camera capture or file upload.
-  * Schema context tracking (learns the structure from previous records to ensure consistency).
-  * Guided human-in-the-loop table editing.
-  * AES-256 end-to-end data encryption.
-  * Session isolation and security.
-  * Export options to CSV and JSON formats.
-
-### Tier 2: Intelligence Engine ($23/month)
-* **Goal**: Advanced analysis, statistical evaluation, and data intelligence.
-* **Core features**:
-  * All Tier 1 Records Vault functionality.
-  * Manual and AI-assisted analytics tools.
-  * External dataset upload (CSV, Excel, JSON) for combined analysis.
-  * Tag and reference (@mention) system to isolate specific data inside chat.
-  * Natural language AI Chat Assistant for queries, summaries, and calculations.
-  * Automated chart and graph generation.
-  * Real-time trend and anomaly detection.
-
----
-
-## 🏗️ Project Architecture
-
-VISIOLOG is built with a decentralized, component-based frontend and serverless API handlers on Vercel:
-
-```
-                  ┌──────────────────────────────────────────────┐
-                  │                 USER BROWSER                 │
-                  └──────┬───────────────┬────────────────┬──────┘
-                         │               │                │
-                         ▼               ▼                ▼
-                     ┌───────┐      ┌─────────┐      ┌─────────┐
-                     │   /   │      │ /upload │      │  /data  │
-                     │ Landing  │      │ Capture │      │ Vault & │
-                     │ Page  │      │ Ingest  │      │ Engine  │
-                     └───────┘      └─────────┘      └─────────┘
-                         │               │                │
-                         └───────────────┼────────────────┘
-                                         ▼ (HTTPS API Calls)
-                  ┌──────────────────────────────────────────────┐
-                  │                  API LAYER                   │
-                  │                 (/api/*)                     │
-                  └──────────────────────┬───────────────────────┘
-                                         ▼
-                 ┌──────────────────────────────────────────────┐
-                 │              BACKEND INTEGRATIONS            │
-                 │                                              │
-                 │ • Google Gemini (Vision & Analytics AI)      │
-                 │ • Supabase (Database, Auth, Storage, AES)    │
-                 └──────────────────────────────────────────────┘
+```text
+POST /api/upload-scan
+  → Supabase Storage + pending scan
+  → queued extraction from the data workspace
+  → extracted rows in the table and image archive
 ```
 
-### Directories & Structure
-* `product-page/`: Vite + React project for the marketing landing page (located at `/` in production).
-* `public/`: Root static output directory.
-  * `/upload`: Ingestion app with camera capture and file upload.
-  * `/data`: Digital vault with UniverJS spreadsheet engine and gallery UI.
-* `api/`: Serverless functions (Node.js) handling database operations, AI requests, and uploads.
-* `docs/`: Product planning, business plans, system design documents, and credentials guide.
+### Text
 
----
+CSV, TXT, and XLSX files are parsed locally in the browser and shown in a preview table. The persistence/ingestion endpoint is intentionally pending for the next phase; the current UI does not call a made-up endpoint.
 
-## 🔧 Technology Stack
+## Repository layout
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Frontend | HTML/CSS/JS, React (product page) | User interfaces |
-| Spreadsheet | UniverJS | High-performance canvas spreadsheet engine |
-| Backend | Vercel Serverless (Node.js) | API endpoints |
-| Database | Supabase (PostgreSQL) | Data storage with RLS |
-| Storage | Supabase Storage | Image hosting |
-| AI | Google Gemini 2.5 Flash | Vision extraction and analytics |
-| Auth | Supabase Auth | User authentication |
+```text
+product-page/       React + TypeScript Vite SPA
+  src/App.tsx       Landing page and routes
+  src/Upload.tsx    Image/text upload workspace
+  src/index.css     Shared design tokens and component styles
+  public/           SPA favicon and static assets
+public/             Vercel output and legacy static pages
+  index.html        Built React SPA entry
+  data/index.html   Univer spreadsheet (migration pending)
+  review/index.html Existing review console
+api/                Vercel serverless functions
+lib/                Shared server-side helpers
+supabase_schema.sql Database and storage-oriented schema
+```
 
----
+## Local development
 
-## 📊 Current Implementation Status
+Use Node 22 (the Vite/Rolldown toolchain requires a current Node 22 release).
 
-### ✅ Completed
-- Database migration from JSONBin to Supabase
-- Asynchronous upload-and-go queue system
-- Supabase Storage integration (replaced Cloudinary)
-- UniverJS spreadsheet engine integration
-- API endpoints: `upload-scan`, `process-scan`, `get-scans`, `delete-scan`
-- Database schema: `visiolog_data`, `visiolog_scans`
-- Mobile-optimized capture interface
-- Glassmorphism UI design system
-
-### 🚧 In Progress
-- Frontend upload script update to use `/api/upload-scan`
-- Ingestion Gallery UI with status badges
-- Split-pane image and data viewer
-- Client-triggered polling queue engine
-
-### 📋 Planned
-- Tier 2 Intelligence Engine features
-- AI analytics assistant with chat
-- External data upload (CSV, Excel, JSON)
-- MCP-embedded tools for AI
-- Advanced analytics (trend detection, anomaly detection)
-
----
-
-## 📖 Documentation
-
-- [Implementation Plan](implementation_plan.md) - Detailed technical implementation roadmap
-- [Deployment Instructions](deployment_instructions.md) - Step-by-step Vercel deployment guide
-- [Credentials Guide](docs/CREDENTIALS_GUIDE.md) - How to acquire API keys
-- [System Design Document](docs/SYSTEM_DESIGN_DOCUMENT.md) - Complete architecture specification
-- [Business Plan](docs/BUSINESS_PLAN.md) - Product strategy and market analysis
-- [Walkthrough](walkthrough.md) - Development history and progress
-
----
-
-## 🔐 Security
-
-- **Encryption**: AES-256-GCM at rest, TLS 1.3 in transit
-- **Authentication**: Supabase Auth with Row-Level Security
-- **Isolation**: Per-user session management and data isolation
-- **Privacy**: No data selling, user-owned data with export/delete rights
-
----
-
-## 🚀 Deployment
-
-The project is configured for deployment on the **Vercel** serverless platform.
-
-### Quick Deploy
 ```bash
-node deploy_product.js
-npx vercel --prod
+npm install
+cd product-page && npm install
+cd ..
+npm run build
 ```
 
-### Environment Variables (Required)
-- `VITE_GEMINI_API_KEY` - Google Gemini API key
-- `VITE_SUPABASE_URL` - Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
-- `PASSCODE` - Access passcode for the application
+The root build runs `deploy_product.js`. It builds `product-page/` with Vite and copies `dist/index.html` and `dist/assets/` into `public/`, which is the directory served by Vercel.
 
-### Database Setup
-Before deploying, run the `supabase_schema.sql` script in your Supabase SQL Editor to create the required tables and storage bucket.
+Useful checks:
 
----
+```bash
+npm test
+npm run build
+cd product-page
+npm run typecheck
+npm run lint
+```
 
-## 🤝 Contributing
+## Supabase setup
 
-This is a commercial SaaS product. For inquiries about collaboration or enterprise deployments, please contact the development team.
+Run `supabase_schema.sql` in the Supabase SQL editor and create the `logbooks` Storage bucket required by `api/upload-scan.js`. Configure server-side environment variables in the deployment platform; never commit credentials. The exact variables depend on the deployed API configuration and should be copied from the repository's credentials guide or deployment environment.
 
----
+## Vercel deployment
 
-## 📄 License
+Use the repository root as the Vercel project root:
 
-Proprietary - All rights reserved.
+- Build command: `npm run build`
+- Output directory: `public`
+- Node runtime: 22.x
 
----
+`vercel.json` routes `/upload` to the React SPA and preserves the static `/data` and `/review` routes. API functions remain under `/api`.
 
-**VISIOLOG** - Transforming physical records into digital intelligence.
+## Migration plan
 
+1. **Phase 1 — complete:** React + TypeScript Vite foundation and the new image/text upload route.
+2. **Phase 2 — next:** simplify the Supabase extraction pipeline and remove the validation/needs-review stage from processing and storage.
+3. **Phase 3:** migrate `/data` to React and install Univer through npm while preserving the spreadsheet and image/table workspace.
+4. **Phase 4:** add persisted text ingestion, append semantics, and optional external integrations/synchronization; retire `/review`.
+
+Until those phases land, `/data`, `/review`, and the existing serverless pipeline remain intentionally separate from the new upload shell.
