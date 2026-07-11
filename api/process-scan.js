@@ -5,34 +5,9 @@ import {
     DEFAULT_TEMPLATE,
     createExtractionPrompt,
     normalizeTemplate
-} from './lib/visitor-schema.js';
-import { validateVisitorRecords } from './lib/validation.js';
-
-function parseModelJson(responseText) {
-    const sanitizedText = responseText
-        .replace(/```json/gi, '')
-        .replace(/```/g, '')
-        .trim();
-    const startArray = sanitizedText.indexOf('[');
-    const startObject = sanitizedText.indexOf('{');
-    let startIndex = -1;
-    let endIndex = -1;
-    if (startArray !== -1 && (startObject === -1 || startArray < startObject)) {
-        startIndex = startArray;
-        endIndex = sanitizedText.lastIndexOf(']');
-    } else if (startObject !== -1) {
-        startIndex = startObject;
-        endIndex = sanitizedText.lastIndexOf('}');
-    }
-    if (startIndex === -1 || endIndex <= startIndex) {
-        throw new Error('Could not find JSON in model response.');
-    }
-    const rawJson = sanitizedText.substring(startIndex, endIndex + 1)
-        .replace(/,\s*([\]}])/g, '$1')
-        .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
-    const parsed = JSON.parse(rawJson);
-    return Array.isArray(parsed) ? parsed : [parsed];
-}
+} from '../lib/visitor-schema.js';
+import { parseExtractionCsv } from '../lib/csv-parser.js';
+import { validateVisitorRecords } from '../lib/validation.js';
 
 async function resolveTemplate(supabase, scanRecord) {
     if (scanRecord.template_id) {
@@ -116,7 +91,7 @@ export default async function handler(req, res) {
             createExtractionPrompt(template),
             { inlineData: { data: base64Data, mimeType } }
         ]);
-        const extractedRecords = parseModelJson(result.response.text());
+        const extractedRecords = parseExtractionCsv(result.response.text(), template);
 
         await supabase
             .from('visiolog_scans')

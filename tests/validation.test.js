@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import {
     DEFAULT_SECURITY_GATE_TEMPLATE,
-    STARTER_TEMPLATES
-} from '../api/lib/visitor-schema.js';
-import { validateVisitorRecords } from '../api/lib/validation.js';
+    STARTER_TEMPLATES,
+    createExtractionPrompt
+} from '../lib/visitor-schema.js';
+import { parseCsv, parseExtractionCsv } from '../lib/csv-parser.js';
+import { validateVisitorRecords } from '../lib/validation.js';
 
 function confidenceFor(template, value = 0.99) {
     return Object.fromEntries(template.fields.map(field => [field.key, value]));
@@ -122,4 +124,35 @@ assert.equal(lowConfidence.review_status, 'needs_review');
 assert.ok(lowConfidence.validation_errors.some(error => error.code === 'low_confidence'));
 assert.ok(lowConfidence.validation_errors.some(error => error.code === 'low_overall_confidence'));
 
+const csvSample = [
+    'department,name,date',
+    'Physics,"Doe, Jane",',
+    'Chemistry,"O""Neil, Pat",01/04/2025'
+].join('\n');
+const csvRecords = parseExtractionCsv(csvSample, classroom);
+assert.equal(csvRecords.length, 2);
+assert.equal(csvRecords[0].fields.name, 'Doe, Jane');
+assert.equal(csvRecords[0].fields.department, 'Physics');
+assert.equal(csvRecords[0].fields.date, null);
+assert.equal(csvRecords[0].confidence.name, 1.0);
+assert.equal(csvRecords[0].confidence.date, 0);
+assert.equal(csvRecords[1].fields.name, 'O"Neil, Pat');
+assert.equal(csvRecords[1].fields.date, '01/04/2025');
+
+const positionalRecords = parseExtractionCsv(
+    'unknown,also_unknown\nPositional Name,Physics',
+    classroom
+);
+assert.equal(positionalRecords[0].fields.name, 'Positional Name');
+assert.equal(positionalRecords[0].fields.matric_number, 'Physics');
+
+const multilineRows = parseCsv('name,department\n"Ada\nVisitor",Physics');
+assert.equal(multilineRows[1][0], 'Ada\nVisitor');
+
+const extractionPrompt = createExtractionPrompt(classroom);
+assert.match(extractionPrompt, /name,matric_number,department,level,course_code,date,time_in,time_out/);
+assert.match(extractionPrompt, /Return ONLY raw CSV/);
+assert.doesNotMatch(extractionPrompt, /JSON array|confidence object/i);
+
+console.log('CSV parser sanity:', JSON.stringify(csvRecords, null, 2));
 console.log('Validation tests passed');
