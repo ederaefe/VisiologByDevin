@@ -60,6 +60,7 @@
                     try {
                         const response = await fetch('/api/get-scans');
                         const data = await response.json();
+                        console.log('Scans response:', data);
                         if (data.scans) {
                             const formattedImages = data.scans.map(scan => ({
                                 id: scan.id,
@@ -87,8 +88,12 @@
                     try {
                         const response = await fetch('/api/get-records');
                         const data = await response.json();
+                        console.log('Records response:', data);
                         if (data.records) {
+                            console.log('Setting records:', data.records.length, 'records');
                             setRecords(data.records);
+                        } else {
+                            console.warn('No records in response:', data);
                         }
                     } catch (error) {
                         console.error('Failed to fetch records:', error);
