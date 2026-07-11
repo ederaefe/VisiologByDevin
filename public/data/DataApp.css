@@ -259,6 +259,17 @@ a.btn:hover {
   color: var(--muted);
 }
 
+.error-message {
+  text-align: center;
+  padding: 24px;
+  color: var(--text);
+}
+
+.error-message p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .spinner {
   width: 40px;
   height: 40px;

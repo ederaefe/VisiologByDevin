@@ -41,6 +41,7 @@
             const [passcode, setPasscode] = useState('');
             const [passcodeError, setPasscodeError] = useState('');
             const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+            const [fetchError, setFetchError] = useState('');
             const univerRef = useRef(null);
             const containerRef = useRef(null);
 
@@ -92,11 +93,14 @@
                         if (data.records) {
                             console.log('Setting records:', data.records.length, 'records');
                             setRecords(data.records);
+                            setFetchError('');
                         } else {
                             console.warn('No records in response:', data);
+                            setFetchError('No records available. Upload images from the Upload workspace.');
                         }
                     } catch (error) {
                         console.error('Failed to fetch records:', error);
+                        setFetchError('Error loading records: ' + error.message);
                     }
                 };
 
@@ -291,12 +295,20 @@
                 // Main Content
                 React.createElement('main', { className: 'main-content' },
                     React.createElement('div', { className: 'spreadsheet-container glass' },
-                        isLoading ? 
+                        fetchError ? 
                             React.createElement('div', { className: 'loading-state' },
-                                React.createElement('div', { className: 'spinner' }),
-                                React.createElement('p', null, 'Loading workspace...')
+                                React.createElement('div', { className: 'error-message' },
+                                    React.createElement('p', null, fetchError),
+                                    React.createElement('p', { style: { fontSize: '0.9rem', color: 'var(--muted)', marginTop: '12px' } }, 'Check browser console for details.')
+                                )
                             ) :
-                            React.createElement('div', { ref: containerRef, className: 'univer-container' })
+                            isLoading ? 
+                                React.createElement('div', { className: 'loading-state' },
+                                    React.createElement('div', { className: 'spinner' }),
+                                    React.createElement('p', null, 'Loading workspace...'),
+                                    React.createElement('p', { style: { fontSize: '0.85rem', color: 'var(--muted)', marginTop: '8px' } }, `Records: ${records.length}`)
+                                ) :
+                                React.createElement('div', { ref: containerRef, className: 'univer-container' })
                     ),
                     // Image Sidebar
                     React.createElement('aside', { className: `image-sidebar glass ${isSidebarOpen ? 'open' : ''}` },
