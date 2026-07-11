@@ -9,7 +9,7 @@
     },
     {
       "source": "/data",
-      "destination": "/data/index-simple.html"
+      "destination": "/data/index.html"
     },
     {
       "source": "/review",
