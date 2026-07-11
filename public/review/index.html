@@ -67,6 +67,8 @@
             border-radius:9px; padding:9px 12px;
         }
         .btn:hover { border-color: var(--accent); }
+        a.btn { text-decoration: none; color: inherit; }
+        a.btn:hover { text-decoration: none; color: inherit; }
         .btn.primary { background: var(--accent); border-color: var(--accent); color:white; }
         .btn.danger { color: var(--error); }
         .layout { display:grid; grid-template-columns: 290px minmax(0,1fr); gap:14px; min-height: calc(100vh - 105px); }
@@ -150,6 +152,8 @@
                 <div><h1>VISIOLOG Review Console</h1><p class="subtitle">Correct, approve, or reject extracted records</p></div>
             </div>
             <div class="toolbar">
+                <a href="/data/index-simple.html" class="btn">Data</a>
+                <a href="/upload" class="btn">Upload</a>
                 <select id="list-filter" aria-label="Worklist filter">
                     <option value="flagged">Flagged scans</option>
                     <option value="all">All scans</option>

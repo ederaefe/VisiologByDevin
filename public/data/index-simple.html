@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VISIOLOG · Data Workspace</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- UniverJS Dependencies -->
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/rxjs/dist/bundles/rxjs.umd.min.js"></script>
+    <script src="https://unpkg.com/echarts@5.6.0/dist/echarts.min.js"></script>
+    
+    <!-- UniverJS -->
+    <script src="https://unpkg.com/@univerjs/presets/lib/umd/index.js"></script>
+    <script src="https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/index.js"></script>
+    <script src="https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/locales/en-US.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@univerjs/preset-sheets-core/lib/index.css" />
+    
+    <link rel="stylesheet" href="DataApp.css" />
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script>
+        // VISIOLOG Data Workspace - Integrated with existing backend
+        const { useState, useEffect, useRef } = React;
+
+        function DataApp() {
+            const [theme, setTheme] = useState('dark');
+            const [selectedImage, setSelectedImage] = useState(null);
+            const [images, setImages] = useState([]);
+            const [records, setRecords] = useState([]);
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [isLoading, setIsLoading] = useState(true);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [passcode, setPasscode] = useState('');
+            const [passcodeError, setPasscodeError] = useState('');
+            const univerRef = useRef(null);
+            const containerRef = useRef(null);
+
+            // Check authentication status
+            useEffect(() => {
+                const authStatus = localStorage.getItem('visiolog_auth');
+                if (authStatus === 'authenticated') {
+                    setIsAuthenticated(true);
+                }
+            }, []);
+
+            // Fetch scans from backend
+            useEffect(() => {
+                if (!isAuthenticated) return;
+                
+                const fetchScans = async () => {
+                    try {
+                        const response = await fetch('/api/get-scans');
+                        const data = await response.json();
+                        if (data.scans) {
+                            const formattedImages = data.scans.map(scan => ({
+                                id: scan.id,
+                                title: scan.filename || `Scan ${scan.id}`,
+                                url: scan.url,
+                                uploadedAt: scan.created_at,
+                                status: scan.status || 'processed',
+                                scanId: scan.id
+                            }));
+                            setImages(formattedImages);
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch scans:', error);
+                    }
+                };
+
+                fetchScans();
+            }, [isAuthenticated]);
+
+            // Fetch records from backend
+            useEffect(() => {
+                if (!isAuthenticated) return;
+                
+                const fetchRecords = async () => {
+                    try {
+                        const response = await fetch('/api/get-records');
+                        const data = await response.json();
+                        if (data.records) {
+                            setRecords(data.records);
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch records:', error);
+                    }
+                };
+
+                fetchRecords();
+            }, [isAuthenticated]);
+
+            // Initialize UniverJS with real data
+            useEffect(() => {
+                if (!isAuthenticated || records.length === 0) return;
+
+                const initUniver = async () => {
+                    try {
+                        const { univerAPI } = createUniver({
+                            locale: LocaleType.EN_US,
+                            locales: [LocaleType.EN_US],
+                            presets: [
+                                UniverSheetsCorePreset({
+                                    container: containerRef.current,
+                                }),
+                            ],
+                        });
+
+                        univerRef.current = univerAPI;
+                        
+                        // Convert records to spreadsheet format
+                        const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Scan ID'];
+                        const cellData = {};
+                        
+                        // Add headers
+                        headers.forEach((header, index) => {
+                            cellData['0'] = cellData['0'] || {};
+                            cellData['0'][index.toString()] = { v: header };
+                        });
+                        
+                        // Add record data
+                        records.forEach((record, rowIndex) => {
+                            const row = (rowIndex + 1).toString();
+                            cellData[row] = {
+                                '0': { v: record.id || '' },
+                                '1': { v: record.data?.name || record.data?.visitor_name || '' },
+                                '2': { v: record.created_at || '' },
+                                '3': { v: record.review_status || 'pending' },
+                                '4': { v: record.template_id || 'default' },
+                                '5': { v: record.scan_id || '' }
+                            };
+                        });
+
+                        // Create workbook with real data
+                        await univerAPI.createUniverSheet({
+                            name: 'VISIOLOG Records',
+                            sheetType: UniverInstanceType.UNIVER_SHEET,
+                            data: {
+                                sheets: {
+                                    'Sheet1': {
+                                        id: 'Sheet1',
+                                        name: 'Records',
+                                        cellData,
+                                        rowCount: Math.max(records.length + 10, 100),
+                                        columnCount: headers.length + 5,
+                                    },
+                                },
+                            },
+                        });
+
+                        setIsLoading(false);
+                    } catch (error) {
+                        console.error('Failed to initialize UniverJS:', error);
+                        setIsLoading(false);
+                    }
+                };
+
+                initUniver();
+
+                return () => {
+                    if (univerRef.current) {
+                        univerRef.current.dispose();
+                    }
+                };
+            }, [isAuthenticated, records]);
+
+            const toggleTheme = () => {
+                setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+            };
+
+            const handleImageSelect = (image) => {
+                setSelectedImage(image);
+                setIsSidebarOpen(false);
+            };
+
+            const handleExport = async () => {
+                try {
+                    // Export functionality using existing records
+                    const dataStr = JSON.stringify(records, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'visiolog-records.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Export failed:', error);
+                }
+            };
+
+            const handlePasscodeSubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/api/validate-passcode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ passcode })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.valid) {
+                        setIsAuthenticated(true);
+                        localStorage.setItem('visiolog_auth', 'authenticated');
+                        setPasscodeError('');
+                    } else {
+                        setPasscodeError('Invalid passcode');
+                    }
+                } catch (error) {
+                    setPasscodeError('Authentication failed');
+                }
+            };
+
+            const handleLogout = () => {
+                setIsAuthenticated(false);
+                localStorage.removeItem('visiolog_auth');
+                setPasscode('');
+            };
+
+            // Authentication Modal
+            if (!isAuthenticated) {
+                return React.createElement('div', { className: 'auth-container' },
+                    React.createElement('div', { className: 'auth-modal glass' },
+                        React.createElement('h2', null, 'VISIOLOG Data Workspace'),
+                        React.createElement('p', { className: 'auth-subtitle' }, 'Enter passcode to access data'),
+                        React.createElement('form', { onSubmit: handlePasscodeSubmit },
+                            React.createElement('input', {
+                                type: 'password',
+                                value: passcode,
+                                onChange: (e) => setPasscode(e.target.value),
+                                placeholder: 'Enter passcode',
+                                className: 'auth-input'
+                            }),
+                            passcodeError && React.createElement('p', { className: 'auth-error' }, passcodeError),
+                            React.createElement('button', { type: 'submit', className: 'auth-btn primary' }, 'Access Workspace')
+                        )
+                    )
+                );
+            }
+
+            return React.createElement('div', { className: 'data-app', 'data-theme': theme },
+                // Header
+                React.createElement('header', { className: 'app-header glass' },
+                    React.createElement('div', { className: 'header-left' },
+                        React.createElement('div', { className: 'brand-mark' },
+                            React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#fff', strokeWidth: '2' },
+                                React.createElement('rect', { x: 3, y: 3, width: 7, height: 7, rx: 1 }),
+                                React.createElement('rect', { x: 14, y: 3, width: 7, height: 7, rx: 1 }),
+                                React.createElement('rect', { x: 3, y: 14, width: 7, height: 7, rx: 1 }),
+                                React.createElement('rect', { x: 14, y: 14, width: 7, height: 7, rx: 1 })
+                            )
+                        ),
+                        React.createElement('div', { className: 'brand-text' },
+                            React.createElement('h1', null, 'VISIOLOG'),
+                            React.createElement('p', { className: 'subtitle' }, 'Data Workspace')
+                        )
+                    ),
+                    React.createElement('div', { className: 'header-actions' },
+                        React.createElement('a', { 
+                            href: '/review',
+                            className: 'btn',
+                            style: { textDecoration: 'none', color: 'inherit' }
+                        }, 'Review'),
+                        React.createElement('a', { 
+                            href: '/upload',
+                            className: 'btn',
+                            style: { textDecoration: 'none', color: 'inherit' }
+                        }, 'Upload'),
+                        React.createElement('button', { 
+                            className: 'btn',
+                            onClick: () => setIsSidebarOpen(!isSidebarOpen)
+                        }, 'Images'),
+                        React.createElement('button', { className: 'btn', onClick: handleExport }, 'Export'),
+                        React.createElement('button', { className: 'btn', onClick: toggleTheme }, theme === 'dark' ? '☀️' : '🌙'),
+                        React.createElement('button', { className: 'btn danger', onClick: handleLogout }, 'Logout')
+                    )
+                ),
+                // Main Content
+                React.createElement('main', { className: 'main-content' },
+                    React.createElement('div', { className: 'spreadsheet-container glass' },
+                        isLoading ? 
+                            React.createElement('div', { className: 'loading-state' },
+                                React.createElement('div', { className: 'spinner' }),
+                                React.createElement('p', null, 'Loading workspace...')
+                            ) :
+                            React.createElement('div', { ref: containerRef, className: 'univer-container' })
+                    ),
+                    // Image Sidebar
+                    React.createElement('aside', { className: `image-sidebar glass ${isSidebarOpen ? 'open' : ''}` },
+                        React.createElement('div', { className: 'sidebar-header' },
+                            React.createElement('h2', null, 'Image Library'),
+                            React.createElement('button', { 
+                                className: 'close-btn',
+                                onClick: () => setIsSidebarOpen(false)
+                            }, '✕')
+                        ),
+                        React.createElement('div', { className: 'image-list' },
+                            images.length === 0 ? 
+                                React.createElement('p', { className: 'empty-state' }, 'No images available') :
+                                images.map(image => 
+                                    React.createElement('div', { 
+                                        key: image.id,
+                                        className: `image-card ${selectedImage?.id === image.id ? 'selected' : ''}`,
+                                        onClick: () => handleImageSelect(image)
+                                    },
+                                        React.createElement('div', { className: 'image-thumbnail' },
+                                            React.createElement('img', { 
+                                                src: image.url, 
+                                                alt: image.title,
+                                                onError: (e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }
+                                            }),
+                                            React.createElement('div', { className: 'placeholder-img', style: { display: 'none' } }, '📷')
+                                        ),
+                                        React.createElement('div', { className: 'image-info' },
+                                            React.createElement('h3', null, image.title),
+                                            React.createElement('p', { className: 'image-meta' }, new Date(image.uploadedAt).toLocaleDateString()),
+                                            React.createElement('span', { className: `status-badge ${image.status}` }, image.status)
+                                        )
+                                    )
+                                )
+                        )
+                    )
+                ),
+                // Image Preview
+                selectedImage && React.createElement('div', { className: 'image-preview glass' },
+                    React.createElement('div', { className: 'preview-header' },
+                        React.createElement('h3', null, selectedImage.title),
+                        React.createElement('button', { 
+                            className: 'close-btn',
+                            onClick: () => setSelectedImage(null)
+                        }, '✕')
+                    ),
+                    React.createElement('div', { className: 'preview-content' },
+                        React.createElement('img', { 
+                            src: selectedImage.url, 
+                            alt: selectedImage.title,
+                            style: { maxWidth: '100%', maxHeight: '400px' }
+                        })
+                    )
+                )
+            );
+        }
+
+        // Mount the React App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(DataApp));
+    </script>
+</body>
+</html>

@@ -296,7 +296,11 @@ function UploadWorkspace() {
     <main className="upload-page">
       <nav className="upload-nav">
         <a className="logo-text" href="/">VISIOLOG</a>
-        <a className="upload-nav-link" href="/">Exit workspace</a>
+        <div className="upload-nav-links">
+          <a className="upload-nav-link" href="/data/index-simple.html">Data</a>
+          <a className="upload-nav-link" href="/review">Review</a>
+          <a className="upload-nav-link" href="/">Exit workspace</a>
+        </div>
       </nav>
       <section className="upload-shell">
         <div className="upload-heading">

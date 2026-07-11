@@ -45,6 +45,7 @@
 }
 
 .upload-nav .logo-text { font-size: 22px; }
+.upload-nav-links { display: flex; gap: 16px; align-items: center; }
 .upload-nav-link, .upload-back-link { color: var(--text-secondary); font-size: 13px; }
 .upload-nav-link:hover, .upload-back-link:hover { color: var(--text-primary); }
 

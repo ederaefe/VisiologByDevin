@@ -72,6 +72,8 @@ function LandingPage() {
             <a href="#how-it-works" className="nav-link">Workflow</a>
             <a href="#pricing" className="nav-link">Pricing</a>
             <a href="#security" className="nav-link">Security</a>
+            <a href="/data/index-simple.html" className="nav-link">Data</a>
+            <a href="/review" className="nav-link">Review</a>
             <a href="/upload" className="btn btn-primary">Launch App</a>
           </div>
         </div>
