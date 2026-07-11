@@ -152,7 +152,7 @@
                 <div><h1>VISIOLOG Review Console</h1><p class="subtitle">Correct, approve, or reject extracted records</p></div>
             </div>
             <div class="toolbar">
-                <a href="/data/index-simple.html" class="btn">Data</a>
+                <button id="back-btn" class="btn">← Back</button>
                 <a href="/upload" class="btn">Upload</a>
                 <select id="list-filter" aria-label="Worklist filter">
                     <option value="flagged">Flagged scans</option>
@@ -360,6 +360,9 @@
         $('#contrast').addEventListener('input', updateImage);
         $('#refresh-btn').addEventListener('click', () => loadWorklist().catch(error => toast(error.message)));
         $('#list-filter').addEventListener('change', () => loadWorklist().catch(error => toast(error.message)));
+        $('#back-btn').addEventListener('click', () => {
+            window.location.href = '/data';
+        });
         $('#theme-btn').addEventListener('click', () => {
             const root = document.documentElement;
             root.toggleAttribute('data-theme');

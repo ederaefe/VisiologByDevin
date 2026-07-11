@@ -40,6 +40,7 @@
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [passcode, setPasscode] = useState('');
             const [passcodeError, setPasscodeError] = useState('');
+            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const univerRef = useRef(null);
             const containerRef = useRef(null);
 
@@ -278,7 +279,7 @@
                             onClick: () => setIsSidebarOpen(!isSidebarOpen)
                         }, 'Images'),
                         React.createElement('button', { className: 'btn', onClick: handleExport }, 'Export'),
-                        React.createElement('button', { className: 'btn', onClick: toggleTheme }, theme === 'dark' ? '☀️' : '🌙'),
+                        React.createElement('button', { className: 'btn', onClick: () => setIsSettingsOpen(true) }, '⚙️'),
                         React.createElement('button', { className: 'btn danger', onClick: handleLogout }, 'Logout')
                     )
                 ),
@@ -343,6 +344,27 @@
                             alt: selectedImage.title,
                             style: { maxWidth: '100%', maxHeight: '400px' }
                         })
+                    )
+                ),
+                // Settings Modal
+                isSettingsOpen && React.createElement('div', { className: 'settings-overlay', onClick: () => setIsSettingsOpen(false) },
+                    React.createElement('div', { className: 'settings-modal glass', onClick: (e) => e.stopPropagation() },
+                        React.createElement('div', { className: 'settings-header' },
+                            React.createElement('h2', null, 'Settings'),
+                            React.createElement('button', { 
+                                className: 'close-btn',
+                                onClick: () => setIsSettingsOpen(false)
+                            }, '✕')
+                        ),
+                        React.createElement('div', { className: 'settings-content' },
+                            React.createElement('div', { className: 'setting-item' },
+                                React.createElement('label', null, 'Theme'),
+                                React.createElement('button', { 
+                                    className: 'btn theme-toggle',
+                                    onClick: toggleTheme 
+                                }, theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode')
+                            )
+                        )
                     )
                 )
             );
