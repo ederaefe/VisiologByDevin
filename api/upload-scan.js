@@ -108,6 +108,20 @@ export default async function handler(req, res) {
             console.warn("Could not remove temporary file:", cleanupError);
         }
 
+        // 3. Trigger automatic processing (non-blocking)
+        // Don't await this - let it process in the background
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+        const processUrl = `${protocol}://${host}/api/process-scan`;
+        
+        fetch(processUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: scanData.id })
+        }).catch(err => {
+            console.warn('Background processing initiated but may continue independently:', err.message);
+        });
+
         return res.status(200).json({
             success: true,
             scanId: scanData.id,
