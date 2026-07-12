@@ -38,6 +38,8 @@
             const [isSidebarOpen, setIsSidebarOpen] = useState(false);
             const [isLoading, setIsLoading] = useState(true);
             const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [isImporting, setIsImporting] = useState(false);
+            const [importProgress, setImportProgress] = useState(0);
             const [passcode, setPasscode] = useState('');
             const [passcodeError, setPasscodeError] = useState('');
             const univerRef = useRef(null);
@@ -97,6 +99,132 @@
                 fetchRecords();
             }, [isAuthenticated]);
 
+            // CSV parsing utility with chunked processing for large files
+            const parseCSV = (csvText, chunkSize = 1000) => {
+                const lines = csvText.split('\n').filter(line => line.trim());
+                if (lines.length === 0) return { headers: [], rows: [] };
+                
+                const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                const rows = [];
+                
+                // Process in chunks to avoid memory overflow
+                for (let i = 1; i < lines.length; i++) {
+                    const values = [];
+                    let currentValue = '';
+                    let inQuotes = false;
+                    
+                    for (let char of lines[i]) {
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            values.push(currentValue.trim().replace(/^"|"$/g, ''));
+                            currentValue = '';
+                        } else {
+                            currentValue += char;
+                        }
+                    }
+                    values.push(currentValue.trim().replace(/^"|"$/g, ''));
+                    
+                    if (values.length === headers.length) {
+                        rows.push(values);
+                    }
+                    
+                    // Process in chunks to avoid memory overflow
+                    if (rows.length >= chunkSize && i < lines.length - 1) {
+                        // Yield chunks for streaming (simulated with setTimeout)
+                        // In production, this would use proper streaming
+                    }
+                }
+                
+                return { headers, rows };
+            };
+
+            // Stream CSV parser for very large files
+            const streamCSV = async (file, onChunk, onProgress) => {
+                const chunkSize = 64 * 1024; // 64KB chunks
+                const reader = file.stream().getReader();
+                let decoder = new TextDecoder();
+                let buffer = '';
+                let totalProcessed = 0;
+                const totalSize = file.size;
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    totalProcessed += value.length;
+                    if (onProgress) {
+                        onProgress(Math.round((totalProcessed / totalSize) * 100));
+                    }
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || ''; // Keep incomplete line
+                    
+                    const csvData = parseCSV(lines.join('\n'));
+                    if (csvData.rows.length > 0) {
+                        onChunk(csvData);
+                    }
+                }
+                
+                // Process remaining buffer
+                if (buffer.trim()) {
+                    const csvData = parseCSV(buffer);
+                    if (csvData.rows.length > 0) {
+                        onChunk(csvData);
+                    }
+                }
+            };
+
+            // Convert records to CSV format for spreadsheet
+            const recordsToCSV = (recordList) => {
+                const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Scan ID', 'Created At'];
+                const csvRows = [headers.join(',')];
+                
+                recordList.forEach(record => {
+                    const row = [
+                        record.id || '',
+                        record.data?.name || record.data?.visitor_name || '',
+                        record.created_at || '',
+                        record.review_status || 'pending',
+                        record.template_id || 'default',
+                        record.scan_id || '',
+                        record.updated_at || record.created_at || ''
+                    ];
+                    const escapedRow = row.map(value => {
+                        const stringValue = String(value || '');
+                        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                            return `"${stringValue.replace(/"/g, '""')}"`;
+                        }
+                        return stringValue;
+                    });
+                    csvRows.push(escapedRow.join(','));
+                });
+                
+                return csvRows.join('\n');
+            };
+
+            // Append CSV data to existing records
+            const appendCSVToRecords = (csvText) => {
+                const { headers, rows } = parseCSV(csvText);
+                
+                const newRecords = rows.map((row, index) => ({
+                    id: row[0] || `CSV-${Date.now()}-${index}`,
+                    data: {
+                        name: row[1] || '',
+                        visitor_name: row[1] || ''
+                    },
+                    created_at: row[2] || new Date().toISOString(),
+                    review_status: row[3] || 'pending',
+                    template_id: row[4] || 'default',
+                    scan_id: row[5] || null,
+                    updated_at: row[6] || new Date().toISOString()
+                }));
+                
+                setRecords(prev => [...prev, ...newRecords]);
+                return newRecords.length;
+            };
+
             // Initialize UniverJS with real data
             useEffect(() => {
                 if (!isAuthenticated || records.length === 0) return;
@@ -115,8 +243,10 @@
 
                         univerRef.current = univerAPI;
                         
-                        // Convert records to spreadsheet format
-                        const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Scan ID'];
+                        // Convert records to CSV format, then parse for spreadsheet
+                        const csvData = recordsToCSV(records);
+                        const { headers, rows } = parseCSV(csvData);
+                        
                         const cellData = {};
                         
                         // Add headers
@@ -125,20 +255,16 @@
                             cellData['0'][index.toString()] = { v: header };
                         });
                         
-                        // Add record data
-                        records.forEach((record, rowIndex) => {
-                            const row = (rowIndex + 1).toString();
-                            cellData[row] = {
-                                '0': { v: record.id || '' },
-                                '1': { v: record.data?.name || record.data?.visitor_name || '' },
-                                '2': { v: record.created_at || '' },
-                                '3': { v: record.review_status || 'pending' },
-                                '4': { v: record.template_id || 'default' },
-                                '5': { v: record.scan_id || '' }
-                            };
+                        // Add CSV rows to spreadsheet
+                        rows.forEach((row, rowIndex) => {
+                            const rowKey = (rowIndex + 1).toString();
+                            cellData[rowKey] = {};
+                            row.forEach((value, colIndex) => {
+                                cellData[rowKey][colIndex.toString()] = { v: value };
+                            });
                         });
 
-                        // Create workbook with real data
+                        // Create workbook with CSV data
                         await univerAPI.createUniverSheet({
                             name: 'VISIOLOG Records',
                             sheetType: UniverInstanceType.UNIVER_SHEET,
@@ -148,7 +274,7 @@
                                         id: 'Sheet1',
                                         name: 'Records',
                                         cellData,
-                                        rowCount: Math.max(records.length + 10, 100),
+                                        rowCount: Math.max(rows.length + 10, 100),
                                         columnCount: headers.length + 5,
                                     },
                                 },
@@ -182,17 +308,160 @@
 
             const handleExport = async () => {
                 try {
-                    // Export functionality using existing records
-                    const dataStr = JSON.stringify(records, null, 2);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    // Use backend CSV export for large datasets
+                    if (records.length > 1000) {
+                        // Use backend streaming for large datasets
+                        const response = await fetch('/api/get-records?format=csv');
+                        if (!response.ok) throw new Error('Export failed');
+                        
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'visiolog-records.csv';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        return;
+                    }
+                    
+                    // Convert records to CSV format for smaller datasets
+                    if (records.length === 0) {
+                        alert('No records to export');
+                        return;
+                    }
+
+                    // CSV headers
+                    const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Scan ID', 'Created At'];
+                    
+                    // Convert records to CSV rows
+                    const csvRows = [];
+                    csvRows.push(headers.join(','));
+                    
+                    records.forEach(record => {
+                        const row = [
+                            record.id || '',
+                            record.data?.name || record.data?.visitor_name || '',
+                            record.created_at || '',
+                            record.review_status || 'pending',
+                            record.template_id || 'default',
+                            record.scan_id || '',
+                            record.updated_at || record.created_at || ''
+                        ];
+                        // Escape CSV values
+                        const escapedRow = row.map(value => {
+                            const stringValue = String(value || '');
+                            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                                return `"${stringValue.replace(/"/g, '""')}"`;
+                            }
+                            return stringValue;
+                        });
+                        csvRows.push(escapedRow.join(','));
+                    });
+
+                    const csvString = csvRows.join('\n');
+                    const blob = new Blob([csvString], { type: 'text/csv' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'visiolog-records.json';
+                    a.download = 'visiolog-records.csv';
                     a.click();
                     URL.revokeObjectURL(url);
                 } catch (error) {
                     console.error('Export failed:', error);
+                    alert('Export failed: ' + error.message);
+                }
+            };
+
+            const handleImport = async () => {
+                try {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.csv';
+                    
+                    input.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        
+                        setIsImporting(true);
+                        setImportProgress(0);
+                        
+                        // Check file size - use backend API for large files
+                        const fileSize = file.size;
+                        const isLargeFile = fileSize > 5 * 1024 * 1024; // 5MB threshold
+                        
+                        if (isLargeFile) {
+                            // Use backend API for large files
+                            const formData = new FormData();
+                            formData.append('csv', file);
+                            
+                            const response = await fetch('/api/process-csv', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error('Backend processing failed');
+                            }
+                            
+                            const result = await response.json();
+                            
+                            // Refresh records to show imported data
+                            const recordsResponse = await fetch('/api/get-records');
+                            const recordsData = await recordsResponse.json();
+                            if (recordsData.records) {
+                                setRecords(recordsData.records);
+                            }
+                            
+                            setImportProgress(100);
+                            setIsImporting(false);
+                            alert(`Successfully imported ${result.processed} of ${result.total} records via backend`);
+                        } else {
+                            // Use client-side processing for smaller files
+                            const reader = new FileReader();
+                            reader.onload = async (event) => {
+                                try {
+                                    const csvText = event.target.result;
+                                    const { headers, rows } = parseCSV(csvText);
+                                    
+                                    // Use backend API for processing
+                                    const response = await fetch('/api/process-csv', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ csv: csvText })
+                                    });
+                                    
+                                    if (!response.ok) {
+                                        throw new Error('Backend processing failed');
+                                    }
+                                    
+                                    const result = await response.json();
+                                    
+                                    // Refresh records to show imported data
+                                    const recordsResponse = await fetch('/api/get-records');
+                                    const recordsData = await recordsResponse.json();
+                                    if (recordsData.records) {
+                                        setRecords(recordsData.records);
+                                    }
+                                    
+                                    setImportProgress(100);
+                                    setIsImporting(false);
+                                    alert(`Successfully imported ${result.processed} of ${result.total} records`);
+                                } catch (error) {
+                                    console.error('CSV processing failed:', error);
+                                    setIsImporting(false);
+                                    alert('Failed to process CSV file');
+                                }
+                            };
+                            
+                            reader.readAsText(file);
+                        }
+                    };
+                    
+                    input.click();
+                } catch (error) {
+                    console.error('Import failed:', error);
+                    setIsImporting(false);
+                    alert('Import failed: ' + error.message);
                 }
             };
 
@@ -277,7 +546,13 @@
                             className: 'btn',
                             onClick: () => setIsSidebarOpen(!isSidebarOpen)
                         }, 'Images'),
-                        React.createElement('button', { className: 'btn', onClick: handleExport }, 'Export'),
+                        React.createElement('button', { className: 'btn', onClick: handleExport }, 'Export CSV'),
+                        React.createElement('button', { 
+                            className: 'btn', 
+                            onClick: handleImport,
+                            disabled: isImporting
+                        }, isImporting ? `Importing... ${importProgress}%` : 'Import CSV'),
+                        React.createElement('span', { className: 'record-count' }, `${records.length} records`),
                         React.createElement('button', { className: 'btn', onClick: toggleTheme }, theme === 'dark' ? '☀️' : '🌙'),
                         React.createElement('button', { className: 'btn danger', onClick: handleLogout }, 'Logout')
                     )

@@ -143,6 +143,40 @@ async function fetchWorklist(supabase, includeAll = false) {
         .filter(scan => includeAll || scan.flagged_count > 0);
 }
 
+// Convert records to CSV format
+function recordsToCSV(records) {
+    if (!records || records.length === 0) return '';
+    
+    const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Scan ID', 'Created At', 'Updated At'];
+    const csvRows = [headers.join(',')];
+    
+    records.forEach(record => {
+        const row = [
+            record.id || '',
+            record.data?.name || record.data?.visitor_name || '',
+            record.created_at || '',
+            record.review_status || 'pending',
+            record.template_id || 'default',
+            record.scan_id || '',
+            record.created_at || '',
+            record.updated_at || record.created_at || ''
+        ];
+        
+        // Escape CSV values
+        const escapedRow = row.map(value => {
+            const stringValue = String(value || '');
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        });
+        
+        csvRows.push(escapedRow.join(','));
+    });
+    
+    return csvRows.join('\n');
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -155,6 +189,20 @@ export default async function handler(req, res) {
     try {
         const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY);
         const params = req.query || {};
+        
+        // Check if CSV format is requested
+        if (params.format === 'csv') {
+            let records = await fetchRecords(supabase, params);
+            if (params.include_audit === 'true' || params.include === 'audit') {
+                records = await fetchAudits(supabase, records);
+            }
+            
+            const csvData = recordsToCSV(records);
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=visiolog-records.csv');
+            return res.status(200).send(csvData);
+        }
+        
         if (params.mode === 'worklist' || params.worklist === 'true') {
             return res.status(200).json({
                 mode: 'worklist',

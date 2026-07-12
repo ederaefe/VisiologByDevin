@@ -213,6 +213,16 @@ button {
   border-color: var(--error);
 }
 
+.record-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-left: 8px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
 a.btn {
   text-decoration: none;
   color: inherit;
