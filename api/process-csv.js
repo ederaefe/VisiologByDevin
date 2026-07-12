@@ -1,39 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { validateVisitorRecords } from './lib/validation.js';
-import { DEFAULT_TEMPLATE, normalizeTemplate } from './lib/visitor-schema.js';
-
-// CSV parser
-function parseCSV(csvText) {
-    const lines = csvText.split('\n').filter(line => line.trim());
-    if (lines.length === 0) return { headers: [], rows: [] };
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const rows = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-        const values = [];
-        let currentValue = '';
-        let inQuotes = false;
-        
-        for (let char of lines[i]) {
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                values.push(currentValue.trim().replace(/^"|"$/g, ''));
-                currentValue = '';
-            } else {
-                currentValue += char;
-            }
-        }
-        values.push(currentValue.trim().replace(/^"|"$/g, ''));
-        
-        if (values.length === headers.length) {
-            rows.push(values);
-        }
-    }
-    
-    return { headers, rows };
-}
+import { validateVisitorRecords } from '../lib/validation.js';
+import { DEFAULT_TEMPLATE, normalizeTemplate } from '../lib/visitor-schema.js';
+import { parseCsv, parseExtractionCsv } from '../lib/csv-parser.js';
 
 // Convert CSV rows to database records
 function csvRowsToRecords(csvRows, template, scanId = null) {
@@ -116,18 +84,50 @@ export default async function handler(req, res) {
 
         const { scan_id, template_id, append = 'true' } = req.body;
         
-        // Parse CSV
-        const { headers, rows } = parseCSV(csvData);
+        // Parse CSV using library
+        const rows = parseCsv(csvData);
         
-        if (rows.length === 0) {
+        if (rows.length < 2) {
             return res.status(400).json({ error: 'No data rows found in CSV' });
         }
+
+        const headers = rows[0];
+        const dataRows = rows.slice(1);
 
         // Get template
         const template = await resolveTemplate(supabase, template_id);
         
-        // Convert CSV rows to records
-        const records = csvRowsToRecords(rows, template, scan_id);
+        // Use the extraction CSV parser if template is available
+        let parsedRecords;
+        if (template) {
+            parsedRecords = parseExtractionCsv(csvData, template);
+        } else {
+            // Fall back to simple mapping
+            parsedRecords = dataRows.map(row => ({
+                fields: {
+                    name: row[1] || '',
+                    visitor_name: row[1] || ''
+                },
+                confidence: {}
+            }));
+        }
+        
+        // Convert parsed records to database format
+        const records = parsedRecords.map(parsed => {
+            const validated = validateVisitorRecords([parsed], template || DEFAULT_TEMPLATE)[0];
+            return {
+                scan_id: scan_id,
+                data: validated.data,
+                confidence: validated.confidence,
+                overall_confidence: validated.overall_confidence,
+                validation_status: validated.validation_status,
+                validation_errors: validated.validation_errors,
+                raw_extra: validated.raw_extra || {},
+                review_status: validated.validation_status === 'valid' ? 'pending' : 'needs_review',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+        });
         
         // Process in batches to avoid memory overflow
         const batchSize = 100;
