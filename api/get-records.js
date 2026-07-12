@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
     DEFAULT_TEMPLATE,
     normalizeTemplate
-} from './lib/visitor-schema.js';
+} from '../lib/visitor-schema.js';
 
 function publicImageUrl(supabase, filename) {
     if (!filename) return null;

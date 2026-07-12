@@ -103,6 +103,9 @@ create table if not exists public.visiolog_scans (
     filename text not null,
     template_id uuid references public.logbook_templates(id),
     status text not null default 'pending', -- pending, processing, validating, completed, needs_review, failed
+    attempt_count integer not null default 0,
+    last_attempt_at timestamp with time zone,
+    next_retry_at timestamp with time zone,
     error_message text,
     extracted_data jsonb,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null

@@ -269,6 +269,17 @@ a.btn:hover {
   color: var(--muted);
 }
 
+.error-message {
+  text-align: center;
+  padding: 24px;
+  color: var(--text);
+}
+
+.error-message p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .spinner {
   width: 40px;
   height: 40px;
@@ -552,4 +563,80 @@ a.btn:hover {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
+}
+
+/* ===== Settings Modal ===== */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.settings-modal {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-header h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.settings-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.setting-item label {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn.theme-toggle {
+  flex: 1;
+  text-align: center;
+}
+
+.btn.theme-toggle:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }

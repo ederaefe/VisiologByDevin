@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>VISIOLOG · Review Console</title>
+    <title>VISIOLOG · Image Gallery</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +52,7 @@
             box-shadow: var(--shadow);
             backdrop-filter: blur(18px);
         }
-        .app { width: min(1500px, 100%); margin: auto; padding: 16px; }
+        .app { width: 100%; max-width: 100%; margin: auto; padding: 16px; }
         .topbar {
             display: flex; justify-content: space-between; align-items: center;
             gap: 16px; padding: 14px 18px; margin-bottom: 14px;
@@ -64,82 +64,315 @@
         .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
         .btn, select, .filter-input {
             color: var(--text); background: var(--surface-strong); border:1px solid var(--border);
-            border-radius:9px; padding:9px 12px;
+            border-radius:9px; padding:9px 12px; display: flex; align-items: center; gap: 6px;
         }
         .btn:hover { border-color: var(--accent); }
         a.btn { text-decoration: none; color: inherit; }
         a.btn:hover { text-decoration: none; color: inherit; }
         .btn.primary { background: var(--accent); border-color: var(--accent); color:white; }
         .btn.danger { color: var(--error); }
-        .layout { display:grid; grid-template-columns: 290px minmax(0,1fr); gap:14px; min-height: calc(100vh - 105px); }
-        .worklist { padding: 14px; overflow:auto; }
-        .worklist-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
-        .worklist h2 { font-size:1rem; margin:0; }
-        .scan-list { display:grid; gap:9px; }
-        .scan-card { padding:10px; border:1px solid var(--border); border-radius:11px; cursor:pointer; background:rgba(0,0,0,.08); }
-        .scan-card.active, .scan-card:hover { border-color:var(--accent); }
-        .scan-card img { width:100%; height:90px; object-fit:cover; border-radius:7px; margin-bottom:7px; }
-        .scan-title { font-size:.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .scan-meta { color:var(--muted); font-size:.72rem; display:flex; justify-content:space-between; gap:4px; margin-top:4px; }
-        .badge { display:inline-flex; align-items:center; border-radius:99px; padding:3px 7px; font-size:.67rem; background:rgba(250,204,21,.15); color:var(--warning); }
-        .badge.ok { color:var(--success); background:rgba(74,222,128,.14); }
-        .badge.bad { color:var(--error); background:rgba(255,107,107,.14); }
-        .empty { color:var(--muted); text-align:center; padding:30px 12px; font-size:.85rem; }
-        .review-panel { min-width:0; display:grid; grid-template-columns:minmax(280px, .9fr) minmax(360px, 1.1fr); gap:14px; }
-        .source-panel, .records-panel { padding:14px; min-width:0; }
-        .panel-title { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
-        .panel-title h2 { margin:0; font-size:1rem; }
-        .source-tools { display:flex; gap:6px; flex-wrap:wrap; }
-        .source-stage { min-height:470px; display:grid; place-items:center; overflow:hidden; background:rgba(0,0,0,.2); border-radius:11px; }
-        .source-stage img { max-width:100%; max-height:70vh; transform-origin:center; transition:transform .2s, filter .2s; }
-        .records-scroll { max-height:calc(100vh - 160px); overflow:auto; padding-right:3px; }
-        .record-card { border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; }
-        .record-head { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:9px; }
-        .record-title { font-size:.83rem; color:var(--muted); }
-        .field-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
-        .field { min-width:0; }
-        .field label { display:flex; justify-content:space-between; gap:5px; color:var(--muted); font-size:.7rem; margin-bottom:3px; }
-        .confidence { color:var(--faint); font-size:.66rem; }
-        .field input { width:100%; color:var(--text); background:rgba(0,0,0,.12); border:1px solid var(--border); border-radius:7px; padding:8px; }
-        .field input:focus { outline:2px solid rgba(91,156,245,.35); border-color:var(--accent); }
-        .field.has-error input { border-color:var(--error); box-shadow:0 0 0 1px rgba(255,107,107,.18); }
-        .field.low-confidence input { border-color:var(--warning); }
-        .error-text { display:block; color:var(--error); font-size:.65rem; margin-top:3px; }
-        .record-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-        .audit { margin-top:10px; border-top:1px solid var(--border); padding-top:8px; }
-        .audit summary { cursor:pointer; color:var(--muted); font-size:.73rem; }
-        .audit-item { color:var(--faint); font-size:.68rem; margin-top:6px; }
-        .toast { position:fixed; bottom:18px; right:18px; max-width:320px; padding:11px 14px; border-radius:10px; background:#19191f; color:#fff; opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s; }
-        .toast.show { opacity:1; transform:translateY(0); }
-        #passcode-overlay { position:fixed; inset:0; display:none; place-items:center; z-index:20; background:rgba(0,0,0,.82); backdrop-filter:blur(12px); }
-        #passcode-overlay.active { display:grid; }
-        .passcode-card { width:min(360px,calc(100% - 32px)); padding:25px; text-align:center; }
-        .passcode-card h2 { margin:0 0 6px; }
-        .passcode-card p { color:var(--muted); font-size:.85rem; }
-        .passcode-card input { width:100%; padding:11px; color:var(--text); background:var(--surface-strong); border:1px solid var(--border); border-radius:8px; }
-        .passcode-card button { width:100%; margin-top:10px; }
-        .passcode-error { color:var(--error); min-height:20px; font-size:.75rem; margin-top:7px; }
-        @media (max-width: 980px) {
-            .layout { grid-template-columns: 230px minmax(0,1fr); }
-            .review-panel { grid-template-columns:1fr; }
-            .source-stage { min-height:260px; }
-            .records-scroll { max-height:none; }
+        svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; display: inline; }
+        .gallery-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 14px;
+            min-height: calc(100vh - 105px);
+        }
+        .gallery-main {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 14px;
+        }
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .gallery-item:hover { border-color: var(--accent); }
+        .gallery-item.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity .2s;
+        }
+        .gallery-item:hover img { opacity: .8; }
+        .gallery-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+        .gallery-item:hover .gallery-overlay { opacity: 1; }
+        .overlay-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .overlay-btn:hover { background: rgba(255,255,255,.3); }
+        .data-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .panel-header {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-header h3 {
+            margin: 0;
+            font-size: .9rem;
+        }
+        .csv-viewer {
+            overflow: auto;
+            max-height: 60vh;
+        }
+        .csv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .75rem;
+        }
+        .csv-table th {
+            background: var(--surface-strong);
+            padding: 6px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        .csv-table td {
+            padding: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .csv-table tr:hover { background: rgba(91,156,245,.08); }
+        .image-controls {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .control-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .control-row label {
+            flex: 1;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .75rem;
+            color: var(--muted);
+        }
+        .control-row input[type="range"] {
+            flex: 1;
+            min-width: 60px;
+        }
+        .image-preview {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.3);
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            transform-origin: center;
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: var(--muted);
+            text-align: center;
+        }
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: .5;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.82);
+            backdrop-filter: blur(12px);
+            z-index: 20;
+            place-items: center;
+        }
+        .modal.active { display: grid; }
+        .modal-content {
+            width: min(500px, calc(100% - 32px));
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            max-height: 90vh;
+            overflow: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover { color: var(--text); }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: 2px solid rgba(91,156,245,.35);
+            border-color: var(--accent);
+        }
+        .settings-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-title {
+            font-size: .9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .clear-step {
+            padding: 12px;
+            background: rgba(0,0,0,.2);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: .85rem;
+        }
+        .clear-step strong {
+            display: block;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            max-width: 320px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            background: #19191f;
+            color: #fff;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: .2s;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .passcode-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            z-index: 30;
+            background: rgba(0,0,0,.82);
+            backdrop-filter: blur(12px);
+        }
+        .passcode-overlay.active { display: grid; }
+        .passcode-card {
+            width: min(360px, calc(100% - 32px));
+            padding: 25px;
+            text-align: center;
+        }
+        .passcode-card h2 { margin: 0 0 6px; }
+        .passcode-card p { color: var(--muted); font-size: .85rem; }
+        .passcode-card input {
+            width: 100%;
+            padding: 11px;
+            color: var(--text);
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .passcode-card button { width: 100%; margin-top: 10px; }
+        .passcode-error { color: var(--error); min-height: 20px; font-size: .75rem; margin-top: 7px; }
+        @media (max-width: 1000px) {
+            .gallery-container { grid-template-columns: 1fr; }
+            .data-panel { grid-template-columns: 1fr; }
         }
         @media (max-width: 680px) {
-            .app { padding:8px; }
-            .layout { grid-template-columns:1fr; }
-            .worklist { max-height:300px; }
-            .field-grid { grid-template-columns:1fr; }
-            .topbar { align-items:flex-start; flex-direction:column; }
+            .app { padding: 8px; }
+            .topbar { align-items: flex-start; flex-direction: column; }
+            .toolbar { flex-wrap: wrap; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
         }
     </style>
 </head>
 <body>
-    <div id="passcode-overlay">
-        <div class="passcode-card glass">
-            <h2>Admin review access</h2>
+    <div class="passcode-overlay" id="passcode-overlay">
+        <div class="glass passcode-card">
+            <h2>Gallery access</h2>
             <p>Enter the VISIOLOG passcode to continue.</p>
-            <input id="passcode-input" type="text" autocomplete="off" placeholder="Passcode">
+            <input id="passcode-input" type="password" autocomplete="off" placeholder="Passcode">
             <div id="passcode-error" class="passcode-error"></div>
             <button id="passcode-btn" class="btn primary">Verify</button>
         </div>
@@ -148,188 +381,296 @@
     <main class="app">
         <header class="topbar glass">
             <div class="brand">
-                <div class="brand-mark">✓</div>
-                <div><h1>VISIOLOG Review Console</h1><p class="subtitle">Correct, approve, or reject extracted records</p></div>
+                <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <div><h1>VISIOLOG Gallery</h1><p class="subtitle">Manage and organize your captured images</p></div>
             </div>
             <div class="toolbar">
-                <a href="/data/index-simple.html" class="btn">Data</a>
-                <a href="/upload" class="btn">Upload</a>
-                <select id="list-filter" aria-label="Worklist filter">
-                    <option value="flagged">Flagged scans</option>
-                    <option value="all">All scans</option>
-                </select>
-                <button class="btn" id="refresh-btn">Refresh</button>
-                <button class="btn" id="theme-btn">Theme</button>
+                <button id="back-btn" class="btn" title="Back to Data"><svg viewBox="0 0 24 24" stroke="currentColor"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back</button>
+                <a href="/upload" class="btn"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg> Upload</a>
+                <button id="refresh-btn" class="btn"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M1 4v6h6M23 20v-6h-6"></path><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 03.51 15"></path></svg> Refresh</button>
+                <button id="theme-btn" class="btn"><svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg> Theme</button>
+                <button id="settings-btn" class="btn"><svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg> Settings</button>
             </div>
         </header>
 
-        <section class="layout">
-            <aside class="worklist glass">
-                <div class="worklist-head"><h2>Review worklist</h2><span id="scan-count" class="badge">0</span></div>
-                <div id="scan-list" class="scan-list"><div class="empty">Loading scans…</div></div>
-            </aside>
-            <section class="review-panel">
-                <div class="source-panel glass">
-                    <div class="panel-title"><h2>Source photograph</h2><div class="source-tools">
-                        <button class="btn" id="zoom-out">−</button><button class="btn" id="zoom-in">+</button>
-                        <button class="btn" id="rotate">Rotate</button><button class="btn" id="reset-image">Reset</button>
-                    </div></div>
-                    <div class="source-tools" style="margin-bottom:8px;">
-                        <label class="confidence">Brightness <input id="brightness" type="range" min="50" max="180" value="100"></label>
-                        <label class="confidence">Contrast <input id="contrast" type="range" min="50" max="180" value="100"></label>
+        <section class="gallery-container">
+            <div class="gallery-main glass">
+                <div class="panel-header">
+                    <h3>Image Gallery (<span id="image-count">0</span> images)</h3>
+                </div>
+                <div class="gallery-grid" id="gallery-grid">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+                        <p>No images yet. Upload some images to get started.</p>
                     </div>
-                    <div class="source-stage"><img id="source-image" alt="Select a scan to view its source image"></div>
                 </div>
-                <div class="records-panel glass">
-                    <div class="panel-title"><h2 id="records-title">Select a scan</h2><span id="template-name" class="badge">—</span></div>
-                    <div id="records-list" class="records-scroll"><div class="empty">Choose a scan from the worklist.</div></div>
+            </div>
+
+            <div class="data-panel glass">
+                <div class="panel-header">
+                    <h3 id="data-title">Select an image</h3>
                 </div>
-            </section>
+                <div class="image-preview">
+                    <img id="preview-image" alt="Preview">
+                </div>
+                <div class="image-controls">
+                    <div class="control-row">
+                        <label><span>Brightness</span><input id="brightness" type="range" min="50" max="180" value="100"></label>
+                    </div>
+                    <div class="control-row">
+                        <label><span>Contrast</span><input id="contrast" type="range" min="50" max="180" value="100"></label>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn" id="rotate-btn"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path></svg> Rotate</button>
+                        <button class="btn" id="reset-btn"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M3 12a9 9 0 009-9 9.75 9.75 0 016.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg> Reset</button>
+                    </div>
+                </div>
+                <div class="csv-viewer">
+                    <table class="csv-table" id="csv-table">
+                        <thead>
+                            <tr><th>Field</th><th>Value</th></tr>
+                        </thead>
+                        <tbody id="csv-body">
+                            <tr><td colspan="2" style="text-align: center; color: var(--muted);">Select an image to view extracted data</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     </main>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">Workspace Management</div>
+                <div class="form-group">
+                    <label>Clear Data Steps</label>
+                    <div class="clear-step">
+                        <strong>Step 1: Review</strong>
+                        <p>Review all images that will be deleted. Make sure you have backups if needed.</p>
+                    </div>
+                    <div class="clear-step">
+                        <strong>Step 2: Confirm</strong>
+                        <p>All images and extracted records will be permanently removed from the database.</p>
+                    </div>
+                    <div class="clear-step">
+                        <strong>Step 3: Execute</strong>
+                        <p>Click the clear button to start the deletion process. This cannot be undone.</p>
+                    </div>
+                    <div class="clear-step">
+                        <strong>Step 4: Verify</strong>
+                        <p>The gallery will refresh and show an empty state once completed successfully.</p>
+                    </div>
+                    <button class="btn danger" onclick="showClearConfirm()"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Clear All Data</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">Display Preferences</div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="auto-refresh">
+                        Auto-refresh gallery every 30 seconds
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear Confirmation Modal -->
+    <div class="modal" id="clear-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Clear All Data</h2>
+                <button class="modal-close" onclick="closeClearConfirm()">&times;</button>
+            </div>
+            <p style="color: var(--muted); margin: 0 0 16px;">This action will permanently delete <strong id="image-count-confirm">0</strong> images and all associated extracted records. This cannot be undone.</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="closeClearConfirm()">Cancel</button>
+                <button class="btn danger" onclick="clearAllData()"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Permanently Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Actions Modal -->
+    <div class="modal" id="image-actions-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="action-title">Image Actions</h2>
+                <button class="modal-close" onclick="closeImageActions()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Rename image</label>
+                <input type="text" id="rename-input" placeholder="Enter new name">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="closeImageActions()">Cancel</button>
+                <button class="btn primary" onclick="renameScan()"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Save</button>
+                <button class="btn" onclick="reprocessScan()"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M1 4v6h6M23 20v-6h-6"></path><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 003.51 15"></path></svg> Reprocess</button>
+                <button class="btn danger" onclick="deleteScan()"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Delete</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
+
     <script>
-        const state = { scans: [], records: [], selectedScan: null, zoom: 1, rotation: 0 };
-        const threshold = 0.85;
+        const state = {
+            scans: [],
+            selectedScan: null,
+            zoom: 1,
+            rotation: 0
+        };
+
         const $ = selector => document.querySelector(selector);
+        const $$ = selector => document.querySelectorAll(selector);
 
         function toast(message) {
-            const element = $('#toast');
-            element.textContent = message;
-            element.classList.add('show');
-            clearTimeout(element._timer);
-            element._timer = setTimeout(() => element.classList.remove('show'), 3500);
+            const el = $('#toast');
+            el.textContent = message;
+            el.classList.add('show');
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.remove('show'), 3500);
         }
 
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, char => ({
+        function escapeHtml(val) {
+            return String(val ?? '').replace(/[&<>"']/g, c => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-            }[char]));
+            }[c]));
         }
 
-        function formatDate(value) {
-            return value ? new Date(value).toLocaleString() : 'Unknown date';
+        function formatDate(val) {
+            return val ? new Date(val).toLocaleString() : 'Unknown';
         }
 
-        async function getJson(url, options) {
-            const response = await fetch(url, options);
-            const payload = await response.json();
-            if (!response.ok) throw new Error(payload.error || 'Request failed');
-            return payload;
+        async function getJson(url, opts) {
+            const res = await fetch(url, opts);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Request failed');
+            return data;
         }
 
-        async function loadWorklist() {
-            const all = $('#list-filter').value === 'all';
-            const payload = await getJson(`/api/get-records?mode=worklist${all ? '&all=true' : ''}`);
-            state.scans = payload.scans || [];
-            $('#scan-count').textContent = state.scans.length;
-            renderWorklist();
+        async function loadGallery() {
+            try {
+                const data = await getJson('/api/get-scans');
+                state.scans = data.scans || [];
+                $('#image-count').textContent = state.scans.length;
+                renderGallery();
+            } catch (err) {
+                toast(err.message);
+            }
         }
 
-        function renderWorklist() {
-            const list = $('#scan-list');
+        function renderGallery() {
+            const grid = $('#gallery-grid');
             if (!state.scans.length) {
-                list.innerHTML = '<div class="empty">No scans match this filter.</div>';
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <svg viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+                        <p>No images yet. <a href="/upload">Upload some images</a> to get started.</p>
+                    </div>
+                `;
                 return;
             }
-            list.innerHTML = state.scans.map(scan => `
-                <article class="scan-card ${state.selectedScan === scan.id ? 'active' : ''}" data-scan-id="${escapeHtml(scan.id)}">
-                    ${scan.url ? `<img src="${escapeHtml(scan.url)}" alt="Source page">` : ''}
-                    <div class="scan-title">${escapeHtml(scan.filename)}</div>
-                    <div class="scan-meta"><span>${escapeHtml(formatDate(scan.created_at))}</span><span class="badge ${scan.flagged_count ? '' : 'ok'}">${scan.flagged_count} flagged</span></div>
-                    <div class="scan-meta"><span>Needs review: ${scan.counts?.needs_review || 0}</span><span>Approved: ${scan.counts?.approved || 0}</span></div>
+
+            grid.innerHTML = state.scans.map(scan => `
+                <article class="gallery-item ${state.selectedScan === scan.id ? 'active' : ''}" data-scan-id="${escapeHtml(scan.id)}">
+                    <img src="${escapeHtml(scan.url || '')}" alt="Image">
+                    <div class="gallery-overlay">
+                        <button class="overlay-btn" onclick="showImageActions('${escapeHtml(scan.id)}')" title="Actions">
+                            <svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        </button>
+                    </div>
                 </article>
             `).join('');
-            list.querySelectorAll('[data-scan-id]').forEach(card => {
+
+            $$('[data-scan-id]').forEach(card => {
                 card.addEventListener('click', () => selectScan(card.dataset.scanId));
             });
         }
 
         async function selectScan(scanId) {
             state.selectedScan = scanId;
-            const scan = state.scans.find(item => item.id === scanId);
+            const scan = state.scans.find(s => s.id === scanId);
+
             if (scan) {
-                $('#source-image').src = scan.url || '';
-                $('#records-title').textContent = `${scan.filename} · records`;
+                $('#data-title').textContent = escapeHtml(scan.filename);
+                const img = $('#preview-image');
+                img.src = scan.url || '';
+                img.style.display = 'block';
+                updateImage();
+
+                try {
+                    const data = await getJson(`/api/get-records?scan_id=${encodeURIComponent(scanId)}`);
+                    renderCsv(data.records || []);
+                } catch (err) {
+                    console.error('Failed to load records:', err);
+                    $('#csv-body').innerHTML = '<tr><td colspan="2" style="color: var(--error);">Failed to load extracted data</td></tr>';
+                }
             }
-            renderWorklist();
-            try {
-                const payload = await getJson(`/api/get-records?scan_id=${encodeURIComponent(scanId)}&include_audit=true`);
-                state.records = payload.records || [];
-                const template = state.records[0]?.template;
-                $('#template-name').textContent = template?.name || 'Default template';
-                renderRecords();
-            } catch (error) {
-                toast(error.message);
-            }
+
+            renderGallery();
         }
 
-        function errorFor(record, key) {
-            return (record.validation_errors || []).find(error => error.field === key);
-        }
-
-        function renderRecords() {
-            const list = $('#records-list');
-            if (!state.records.length) {
-                list.innerHTML = '<div class="empty">No records found for this scan.</div>';
+        function renderCsv(records) {
+            const tbody = $('#csv-body');
+            if (!records.length) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--muted);">No extracted records</td></tr>';
                 return;
             }
-            list.innerHTML = state.records.map(record => {
-                const fields = record.template?.fields || [];
-                const fieldMarkup = fields.map(field => {
-                    const error = errorFor(record, field.key);
-                    const confidence = Number(record.confidence?.[field.key] ?? 0);
-                    const confidenceText = `${Math.round(confidence * 100)}%`;
-                    const classes = `${error ? 'has-error' : ''} ${confidence < threshold ? 'low-confidence' : ''}`;
-                    return `<div class="field ${classes}">
-                        <label for="record-${record.id}-${escapeHtml(field.key)}">${escapeHtml(field.label)} <span class="confidence">${confidenceText}</span></label>
-                        <input id="record-${record.id}-${escapeHtml(field.key)}" data-record-id="${escapeHtml(record.id)}" data-field-key="${escapeHtml(field.key)}" value="${escapeHtml(record.data?.[field.key] ?? '')}">
-                        ${error ? `<span class="error-text">${escapeHtml(error.message)}</span>` : ''}
-                    </div>`;
-                }).join('');
-                const auditMarkup = (record.audits || []).map(audit => `
-                    <div class="audit-item"><strong>${escapeHtml(audit.action)}</strong> · ${escapeHtml(audit.actor)} · ${escapeHtml(formatDate(audit.created_at))}</div>
-                `).join('') || '<div class="audit-item">No audit events yet.</div>';
-                return `<article class="record-card" data-record-card="${escapeHtml(record.id)}">
-                    <div class="record-head"><span class="record-title">Row ${record.row_index + 1} · ${escapeHtml(record.validation_status)}</span><span class="badge ${record.review_status === 'approved' ? 'ok' : record.review_status === 'rejected' ? 'bad' : ''}">${escapeHtml(record.review_status)}</span></div>
-                    <div class="field-grid">${fieldMarkup}</div>
-                    <div class="record-actions">
-                        <button class="btn primary" data-action="save" data-record-id="${escapeHtml(record.id)}">Save</button>
-                        <button class="btn" data-action="approve" data-record-id="${escapeHtml(record.id)}">Approve</button>
-                        <button class="btn danger" data-action="reject" data-record-id="${escapeHtml(record.id)}">Reject</button>
-                        <button class="btn" data-action="reprocess">Reprocess scan</button>
-                    </div>
-                    <details class="audit"><summary>Audit history (${record.audits?.length || 0})</summary>${auditMarkup}</details>
-                </article>`;
-            }).join('');
-            list.querySelectorAll('[data-action]').forEach(button => {
-                button.addEventListener('click', () => {
-                    if (button.dataset.action === 'reprocess') reprocessScan();
-                    else updateRecord(button.dataset.recordId, button.dataset.action);
-                });
+
+            const fields = records[0]?.template?.fields || [];
+            const rows = records.map(r => r.data || {});
+
+            let html = '';
+            fields.forEach(field => {
+                const values = rows.map(r => escapeHtml(r[field.key] || '—'));
+                html += `<tr><td><strong>${escapeHtml(field.label)}</strong></td><td>${values[0] || '—'}</td></tr>`;
             });
+
+            tbody.innerHTML = html || '<tr><td colspan="2" style="color: var(--muted);">No data</td></tr>';
         }
 
-        function dataForRecord(recordId) {
-            const data = {};
-            document.querySelectorAll(`[data-record-id="${CSS.escape(recordId)}"][data-field-key]`).forEach(input => {
-                data[input.dataset.fieldKey] = input.value;
-            });
-            return data;
+        function updateImage() {
+            const img = $('#preview-image');
+            img.style.transform = `scale(${state.zoom}) rotate(${state.rotation}deg)`;
+            img.style.filter = `brightness(${$('#brightness').value}%) contrast(${$('#contrast').value}%)`;
         }
 
-        async function updateRecord(recordId, action) {
+        function showImageActions(scanId) {
+            state.selectedScan = scanId;
+            const scan = state.scans.find(s => s.id === scanId);
+            $('#action-title').textContent = scan ? `${escapeHtml(scan.filename)}` : 'Image Actions';
+            $('#rename-input').value = scan?.filename?.replace(/\.[^/.]+$/, '') || '';
+            $('#image-actions-modal').classList.add('active');
+        }
+
+        function closeImageActions() {
+            $('#image-actions-modal').classList.remove('active');
+        }
+
+        async function renameScan() {
+            if (!state.selectedScan) return;
+            const newName = $('#rename-input').value.trim();
+            if (!newName) { toast('Enter a new name'); return; }
+
             try {
-                const payload = await getJson('/api/update-record', {
+                await getJson('/api/update-record', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: recordId, action, data: dataForRecord(recordId), actor: 'admin' })
+                    body: JSON.stringify({ id: state.selectedScan, action: 'rename', data: { filename: newName } })
                 });
-                toast(`${action[0].toUpperCase()}${action.slice(1)} complete`);
-                await selectScan(state.selectedScan);
-                return payload;
-            } catch (error) {
-                toast(error.message);
+                toast('Renamed successfully');
+                closeImageActions();
+                await loadGallery();
+            } catch (err) {
+                toast(err.message);
             }
         }
 
@@ -337,71 +678,137 @@
             if (!state.selectedScan) return;
             try {
                 await getJson(`/api/process-scan?id=${encodeURIComponent(state.selectedScan)}`, { method: 'POST' });
-                toast('Scan reprocessed');
-                await loadWorklist();
-                await selectScan(state.selectedScan);
-            } catch (error) {
-                toast(error.message);
+                toast('Reprocessing...');
+                closeImageActions();
+                await new Promise(r => setTimeout(r, 2000));
+                await loadGallery();
+            } catch (err) {
+                toast(err.message);
             }
         }
 
-        function updateImage() {
-            const image = $('#source-image');
-            image.style.transform = `scale(${state.zoom}) rotate(${state.rotation}deg)`;
-            image.style.filter = `brightness(${$('#brightness').value}%) contrast(${$('#contrast').value}%)`;
+        async function deleteScan() {
+            if (!state.selectedScan) return;
+            try {
+                await getJson('/api/delete-scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: state.selectedScan })
+                });
+                toast('Image deleted');
+                closeImageActions();
+                state.selectedScan = null;
+                await loadGallery();
+            } catch (err) {
+                toast(err.message);
+            }
         }
-        $('#zoom-in').addEventListener('click', () => { state.zoom = Math.min(3, state.zoom + .1); updateImage(); });
-        $('#zoom-out').addEventListener('click', () => { state.zoom = Math.max(.5, state.zoom - .1); updateImage(); });
-        $('#rotate').addEventListener('click', () => { state.rotation = (state.rotation + 90) % 360; updateImage(); });
-        $('#reset-image').addEventListener('click', () => {
-            state.zoom = 1; state.rotation = 0; $('#brightness').value = 100; $('#contrast').value = 100; updateImage();
-        });
+
+        function openSettings() {
+            $('#settings-modal').classList.add('active');
+        }
+
+        function closeSettings() {
+            $('#settings-modal').classList.remove('active');
+        }
+
+        function showClearConfirm() {
+            $('#image-count-confirm').textContent = state.scans.length;
+            closeSettings();
+            $('#clear-modal').classList.add('active');
+        }
+
+        function closeClearConfirm() {
+            $('#clear-modal').classList.remove('active');
+        }
+
+        async function clearAllData() {
+            try {
+                const scanIds = state.scans.map(s => s.id);
+                for (const id of scanIds) {
+                    await getJson('/api/delete-scan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id })
+                    });
+                }
+                toast('All data cleared');
+                closeClearConfirm();
+                state.selectedScan = null;
+                await loadGallery();
+            } catch (err) {
+                toast(err.message);
+            }
+        }
+
+        // Event listeners
         $('#brightness').addEventListener('input', updateImage);
         $('#contrast').addEventListener('input', updateImage);
-        $('#refresh-btn').addEventListener('click', () => loadWorklist().catch(error => toast(error.message)));
-        $('#list-filter').addEventListener('change', () => loadWorklist().catch(error => toast(error.message)));
+        $('#rotate-btn').addEventListener('click', () => {
+            state.rotation = (state.rotation + 90) % 360;
+            updateImage();
+        });
+        $('#reset-btn').addEventListener('click', () => {
+            state.zoom = 1;
+            state.rotation = 0;
+            $('#brightness').value = 100;
+            $('#contrast').value = 100;
+            updateImage();
+        });
+        $('#refresh-btn').addEventListener('click', () => loadGallery().catch(err => toast(err.message)));
+        $('#back-btn').addEventListener('click', () => window.location.href = '/data');
         $('#theme-btn').addEventListener('click', () => {
             const root = document.documentElement;
             root.toggleAttribute('data-theme');
             if (root.hasAttribute('data-theme')) localStorage.setItem('visiolog_theme', 'light');
             else localStorage.setItem('visiolog_theme', 'dark');
         });
-        if (localStorage.getItem('visiolog_theme') === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        $('#settings-btn').addEventListener('click', openSettings);
 
+        if (localStorage.getItem('visiolog_theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        // Passcode check
         (function setupPasscode() {
             const overlay = $('#passcode-overlay');
             const input = $('#passcode-input');
             const button = $('#passcode-btn');
             const error = $('#passcode-error');
+
             if (sessionStorage.getItem('visiolog_authenticated') === 'true') {
-                loadWorklist().catch(err => toast(err.message));
+                overlay.classList.remove('active');
+                loadGallery();
                 return;
             }
+
             overlay.classList.add('active');
             input.focus();
             let attempts = 0;
+
             async function verify() {
-                if (!input.value.trim()) { error.textContent = 'Enter a passcode.'; return; }
+                if (!input.value.trim()) { error.textContent = 'Enter a passcode'; return; }
                 button.disabled = true;
                 try {
-                    const result = await getJson('/api/validate-passcode', {
+                    const res = await getJson('/api/validate-passcode', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ passcode: input.value.trim() })
                     });
-                    if (!result.valid) throw new Error('Incorrect passcode.');
+                    if (!res.valid) throw new Error('Incorrect passcode');
                     sessionStorage.setItem('visiolog_authenticated', 'true');
                     overlay.classList.remove('active');
-                    loadWorklist().catch(err => toast(err.message));
+                    loadGallery();
                 } catch (err) {
                     attempts += 1;
-                    error.textContent = attempts >= 4 ? 'Access locked.' : `${err.message} ${4 - attempts} attempts left.`;
+                    error.textContent = attempts >= 4 ? 'Access locked' : `${err.message} ${4 - attempts} attempts left`;
                 } finally {
                     button.disabled = attempts >= 4;
                 }
             }
+
             button.addEventListener('click', verify);
-            input.addEventListener('keydown', event => { if (event.key === 'Enter') verify(); });
+            input.addEventListener('keydown', e => { if (e.key === 'Enter') verify(); });
         })();
     </script>
 </body>

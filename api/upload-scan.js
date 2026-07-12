@@ -1,13 +1,16 @@
 // /api/upload-scan.js
 import { IncomingForm } from 'formidable';
-import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
+import { createSupabaseClient } from '../lib/supabase-client.js';
 
 export const config = {
     api: {
         bodyParser: false,
     },
 };
+
+const MAX_IMAGE_SIZE = 16 * 1024 * 1024; // 16 MB
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 function firstFieldValue(value) {
     return Array.isArray(value) ? value[0] : value;
@@ -62,7 +65,14 @@ export default async function handler(req, res) {
         const imageBuffer = fs.readFileSync(uploadedFile.filepath);
         const mimeType = uploadedFile.mimetype || 'image/jpeg';
 
-        const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY);
+        if (!ALLOWED_IMAGE_TYPES.has(mimeType)) {
+            return res.status(400).json({ error: 'Unsupported image type. Use JPEG, PNG, or WEBP.' });
+        }
+        if (uploadedFile.size > MAX_IMAGE_SIZE) {
+            return res.status(400).json({ error: 'Image exceeds the maximum allowed size of 16 MB.' });
+        }
+
+        const supabase = createSupabaseClient({ useServiceRole: true });
         const templateId = await resolveTemplateId(
             supabase,
             data.fields.template || data.fields.template_id
@@ -105,9 +115,10 @@ export default async function handler(req, res) {
         try {
             fs.unlinkSync(uploadedFile.filepath);
         } catch (cleanupError) {
-            console.warn("Could not remove temporary file:", cleanupError);
+            console.warn('Could not remove temporary file:', cleanupError);
         }
 
+        // Processing is now decoupled from the upload request.
         return res.status(200).json({
             success: true,
             scanId: scanData.id,

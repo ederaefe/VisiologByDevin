@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import {
     DEFAULT_TEMPLATE,
     normalizeTemplate
-} from './lib/visitor-schema.js';
-import { validateVisitorRecords } from './lib/validation.js';
+} from '../lib/visitor-schema.js';
+import { validateVisitorRecords } from '../lib/validation.js';
 
 const ACTIONS = new Set(['save', 'approve', 'reject']);
 

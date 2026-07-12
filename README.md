@@ -10,7 +10,7 @@ VISIOLOG turns photographed logbook pages into structured records. The applicati
 - `/review` — existing static operations console (scheduled for retirement)
 - `/api/*` — Vercel serverless functions
 
-The architecture is Supabase-only for application storage: PostgreSQL stores records and templates, while Supabase Storage stores source images. Gemini is used by the server-side extraction function. JSONBin and Cloudinary are not part of the active architecture.
+The architecture is Supabase-only for application storage: PostgreSQL stores records and templates, while Supabase Storage stores source images. Gemini 2.5 Flash is used by the server-side extraction function. JSONBin and Cloudinary are not part of the active architecture.
 
 ## Upload flows
 
@@ -21,9 +21,65 @@ The React upload page accepts camera captures and multiple gallery images, compr
 ```text
 POST /api/upload-scan
   → Supabase Storage + pending scan
-  → queued extraction from the data workspace
+  → asynchronous backend processing
   → extracted rows in the table and image archive
 ```
+
+The key change is that the browser only uploads the source image and creates a scan job record. It does not wait for Gemini extraction, CSV parsing, or record persistence.
+
+The new backend flow is:
+
+- `api/upload-scan.js` stores the source image in Supabase Storage and inserts a `visiolog_scans` record with `status = 'pending'`.
+- `lib/scan-processor.js` is the server-side processor that claims pending scans, downloads the stored image, calls Gemini Vision, parses the returned CSV, validates rows, inserts `visiolog_records`, and updates scan status.
+- `api/process-scan.js` delegates explicit single-scan processing to the processor module.
+- `api/process-pending-scans.js` allows bulk worker or cron-driven processing of pending scan jobs.
+- Backend functions use `SUPABASE_SERVICE_ROLE_KEY`; the frontend still uses `VITE_SUPABASE_ANON_KEY` for read-only operations.
+
+Processing is now decoupled from the browser; once upload completes successfully, the frontend can safely close the page.
+
+A secondary backend path can drive retries and bulk processing:
+
+```text
+POST /api/process-pending-scans?limit=5
+```
+
+## Async backend refactor
+
+This repository now separates scan ingestion from extraction and persistence.
+
+- `api/upload-scan.js` uploads the source image to Supabase Storage and records a pending scan job in `visiolog_scans`.
+- `lib/supabase-client.js` centralizes Supabase client creation and supports backend service-role access.
+- `lib/scan-processor.js` claims pending scans, downloads stored images, calls Gemini Vision, parses CSV, validates rows, inserts `visiolog_records`, and updates scan state.
+- `api/process-scan.js` delegates explicit single-scan reprocessing to the backend processor.
+- `api/process-pending-scans.js` allows scheduled or batch execution of pending scan jobs.
+
+This makes uploads lightweight, keeps the browser responsive, and improves fault tolerance by recording retry metadata and error details in the scan job table.
+
+### Key files in the new flow
+
+- `api/upload-scan.js`
+- `api/process-scan.js`
+- `api/process-pending-scans.js`
+- `lib/supabase-client.js`
+- `lib/scan-processor.js`
+- `docs/ASYNC_PROCESSING.md`
+
+### Scan job lifecycle
+
+1. User uploads an image from the browser.
+2. `api/upload-scan` stores it and creates a `pending` scan job.
+3. A worker or cron job calls `api/process-pending-scans`.
+4. The processor extracts CSV text from Gemini, validates it, inserts records, and marks the scan `complete` or `failed`.
+
+### Failure and retry behavior
+
+- Failed scans are marked with `status = 'failed'` and `error_message`.
+- Retry metadata is stored in `attempt_count`, `last_attempt_at`, and `next_retry_at`.
+- The backend schedules retries for transient failures instead of retrying immediately in the browser.
+
+### More details
+
+For a deeper architecture overview, see `docs/ASYNC_PROCESSING.md`.
 
 ### Text
 
@@ -71,7 +127,29 @@ npm run lint
 
 ## Supabase setup
 
-Run `supabase_schema.sql` in the Supabase SQL editor and create the `logbooks` Storage bucket required by `api/upload-scan.js`. Configure server-side environment variables in the deployment platform; never commit credentials. The exact variables depend on the deployed API configuration and should be copied from the repository's credentials guide or deployment environment.
+Run `supabase_schema.sql` in the Supabase SQL editor and create the `logbooks` Storage bucket required by `api/upload-scan.js`.
+
+The backend processor now depends on retry metadata in `visiolog_scans`:
+
+- `attempt_count`
+- `last_attempt_at`
+- `next_retry_at`
+
+Configure these server-side environment variables in the deployment platform; never commit credentials:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+The service role key is required for backend processing and must never be exposed to client-side code.
+
+The worker trigger endpoint is:
+
+```text
+POST /api/process-pending-scans?limit=5
+```
+
+For more architecture details, see `docs/ASYNC_PROCESSING.md`.
 
 ## Vercel deployment
 
