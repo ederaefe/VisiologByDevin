@@ -41,7 +41,9 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = process.env;
+    // Support both VITE_ prefixed and plain env vars for serverless functions
+  const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
         return res.status(500).json({ error: 'Database configuration missing.' });

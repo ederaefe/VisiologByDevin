@@ -44,7 +44,7 @@ try {
   console.log('Deployed public/index.html');
 
   // Emit the SPA shell at each client-side route so Vercel serves it via the
-  // filesystem (like /data and /review). A bare `vercel.json` rewrite to
+  // filesystem (like /upload). A bare `vercel.json` rewrite to
   // /index.html is not reliably applied for these paths, so a real file is
   // shipped for every BrowserRouter route the app owns.
   const spaRoutes = ['upload'];

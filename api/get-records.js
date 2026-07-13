@@ -158,7 +158,6 @@ function recordsToCSV(records) {
             record.review_status || 'pending',
             record.template_id || 'default',
             record.scan_id || '',
-            record.created_at || '',
             record.updated_at || record.created_at || ''
         ];
         

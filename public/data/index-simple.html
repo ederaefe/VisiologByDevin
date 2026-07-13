@@ -47,8 +47,8 @@
 
             // Check authentication status
             useEffect(() => {
-                const authStatus = localStorage.getItem('visiolog_auth');
-                if (authStatus === 'authenticated') {
+                const authStatus = sessionStorage.getItem('visiolog_authenticated');
+                if (authStatus === 'true') {
                     setIsAuthenticated(true);
                 }
             }, []);
@@ -273,7 +273,7 @@
 
             const handleLogout = () => {
                 setIsAuthenticated(false);
-                localStorage.removeItem('visiolog_auth');
+                sessionStorage.removeItem('visiolog_authenticated');
                 setPasscode('');
             };
 
