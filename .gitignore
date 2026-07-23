@@ -16,3 +16,6 @@ node_modules/
 product-page/node_modules/
 product-page/dist/
 .vercel
+
+# Files
+docs/CREDENTIALS_GUIDE.md
