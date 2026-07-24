@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto+Slab:wght@100..900&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
   --bg-primary: #e6e9ef;
@@ -16,7 +15,7 @@
   --border-dark: #303746;
   
   --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: 'Roboto Slab', Georgia, 'Times New Roman', serif;
   --font-mono: 'DM Mono', 'SFMono-Regular', Consolas, monospace;
   
   --shadow-sm: 5px 5px 12px rgba(163, 173, 188, 0.42), -5px -5px 12px rgba(255, 255, 255, 0.78);
